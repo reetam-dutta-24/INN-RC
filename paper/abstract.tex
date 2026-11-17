@@ -1,0 +1,16 @@
+\begin{abstract}
+Reversible data hiding returns the cover exactly, but its hidden bits are lost when the stego image is changed; deep
+steganography networks are robust, but floating-point rounding stops them from returning the cover. We
+propose INN-RC, a lossless steganography scheme built on a message-conditioned integer coupling network (IC-INN). The
+cover is split into two pixel halves that are updated in turn by rounded offsets predicted from the other half and the
+message, so the receiver can undo the network exactly once it knows the message and no latent variable has to be
+stored. A small decoder reads the message back. The bits it gets wrong and the pixels clipped at 0 or 255 are coded with
+a context-adaptive arithmetic coder, whose contexts are the decoder confidence and the coupling offset re-estimated by the
+receiver, and are hidden with multi-layer rhombus prediction-error expansion. The 62.9k-parameter model trains on a CPU and the
+pipeline runs in MATLAB. On \nImgs{} test images from BSD100, Kodak and real DICOM CT/MR/CR scans,
+every successfully embedded image was recovered bit for bit with zero bit error rate. At 0.0156 bpp (1024 bits) the
+stego PSNR is \psnrQfour{} dB (SSIM \ssimQfour{}) and the side information averages \auxQfour{} bits, about half the
+message length, while a float invertible network with the same compensation would need \auxBASE{} bits. Unlike classical
+prediction-error expansion, whose bits are lost under any distortion, the message survives Gaussian noise ($\sigma=2$)
+and 1\% salt-and-pepper noise with a BER of \robgausstwoR\% and \robspsponeR\%.
+\end{abstract}

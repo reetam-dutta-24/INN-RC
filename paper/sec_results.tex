@@ -6,12 +6,11 @@ validation) with random $64\times64$ crops and flips. Testing uses three sets th
 \cite{martin2001bsd} ($256\times256$ centre crops), the 24 Kodak images~\cite{kodak} (grey, $512\times512$ centre crop
 resized to $256\times256$, as is common practice for BOSSbase~\cite{bas2011boss}) and 8 real DICOM slices (3 CT, 2 MR,
 2 CR, 1 perfusion CT) from the public pydicom test collection~\cite{pydicomdata}, windowed to 8 bits and resized to
-$256\times256$. This gives \nImgs{} test images. BOSSbase 1.01 was not reachable from our network; the scripts accept
-any folder of images.
+$256\times256$. This gives \nImgs{} test images (BOSSbase 1.01 was not reachable from our network).
 
 \textbf{Training.} Both IC-INN models are trained for 12{,}000 iterations, batch 12, Adam~\cite{kingma2015adam} with a
-cosine schedule from $10^{-3}$, on a 2-core CPU (about 15 minutes each). Fig.~\ref{fig:train} shows the curriculum: the
-stego PSNR first drops while the decoder learns, then rises as the image loss is switched on.
+cosine schedule from $10^{-3}$, on a 2-core CPU (about 15 minutes each); the training curves are in the supplementary
+material.
 
 \textbf{Compared methods.} (i) Rhombus PEE~\cite{sachnev2009} embedding the message directly, using our implementation
 (the same one used for the side information). (ii) A float-INN baseline with residual compensation: a HiNet-style
@@ -40,10 +39,9 @@ because the overflow part does not shrink with the payload. The robustness-orien
 at the price of about 1--3~dB of PSNR. Fig.~\ref{fig:psnr} shows PSNR and side-information size against
 payload, and Fig.~\ref{fig:visual} shows examples; the difference images are noise-like, with no visible structure.
 
-Classical PEE gives much higher PSNR at these small payloads (\psnrPEEfour{}~dB at 1024 bits). This is expected and we do
-not hide it: when the channel is guaranteed lossless, prediction-error expansion changes only a few hundred pixels by
-one level, while a learned embedding spreads a decodable signal over the whole image. The point of the learned embedding
-is what happens when the channel is \emph{not} lossless (Section~\ref{sec:robust}).
+Classical PEE gives a much higher PSNR at these small payloads (\psnrPEEfour{}~dB at 1024 bits): on a guaranteed lossless
+channel it changes only a few hundred pixels by one level, while a learned embedding spreads a decodable signal over the
+whole image. The benefit of the learned embedding appears when the channel is \emph{not} lossless (Section~\ref{sec:robust}).
 
 \input{tab_main.tex}
 
@@ -57,9 +55,8 @@ the message length.}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\columnwidth]{figs/visual.pdf}
-\caption{IC-INN-Q at 1024 bits (Kodak 23, BSD100 \#10, chest CR, shoulder MR). The recovered images are identical to
-the covers.}
+\includegraphics[width=0.8\columnwidth]{figs/visual.pdf}
+\caption{IC-INN-Q at 1024 bits (Kodak 23, BSD100 \#10, chest CR). The recovered images are identical to the covers.}
 \label{fig:visual}
 \end{figure}
 

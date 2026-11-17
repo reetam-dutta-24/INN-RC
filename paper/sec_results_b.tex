@@ -1,0 +1,28 @@
+\subsection{Comparison with the float-INN baseline}
+Table~\ref{tab:compare} summarises all methods at 1024 bits. The float-INN baseline hides the message well (its decoder
+makes no errors and its stego has \pinnBASE{}~dB before compensation), but when the receiver inverts it with the latent
+set to zero and the stego rounded to 8 bits, \resBASE\% of the cover pixels come back wrong. Coding that residual needs
+\auxBASE{} bits on average, about \auxRatio{} times more than IC-INN-Q and far more than the
+\capPEE{} bits a single PEE layer offers on these images, so not one of the \nImgs{} images could be embedded
+reversibly. This is exactly the failure that motivated the integer, message-conditioned design: in IC-INN the cover
+residual is zero by construction and only overflow and decoder errors remain.
+
+\input{tab_compare.tex}
+
+\subsection{Robustness on a lossy channel}\label{sec:robust}
+Table~\ref{tab:robust} reports the BER when the final stego is distorted before extraction (all Kodak and DICOM images
+and the first 18 BSD100 images). Classical PEE loses everything: its extraction depends on exact pixel values, so its BER
+is about 50\% under every attack. Our decoder reads the message directly from the received image. Without any attack it
+already gets \robnonezeroR\% of the bits wrong (IC-INN-R), which is why the side information is needed for exact recovery;
+under Gaussian noise with $\sigma=2$ the BER is \robgausstwoR\% and under 1\% salt-and-pepper noise \robspsponeR\%. Mild
+JPEG compression (quality 95) gives \robjpegnfR\%, but quality 90 or lower destroys the message (\robjpegninetyR\%), which is
+not surprising since JPEG was not part of the noise layer. The robustness-oriented model is consistently better than the
+quality model, at the cost of 1.5~dB.
+
+\input{tab_robust.tex}
+
+\subsection{Complexity}
+The coupling networks have 42{,}888 parameters and the decoder 19{,}969. Embedding and extraction take about
+\tembQfour{}~s each for a $256\times256$ image in our MATLAB code (Octave, single CPU core), of which most is the inverse
+pass and the arithmetic coder. Classical PEE takes about 0.02~s. The GUI (\texttt{INNRC\_App.m}) runs the same functions
+interactively.
