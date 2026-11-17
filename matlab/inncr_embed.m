@@ -32,7 +32,8 @@ y  = min(max(yt, 0), 255);
 % ---- side information ----
 Ls = icinn_decode(net, y, s);
 err = xor(Ls(:) > 0, sm);                           % bits the decoder gets wrong
-aux = sideinfo_encode(err, Ls, y, yt);
+xh = icinn_invert(net, y, M);                      % what the receiver will compute
+aux = sideinfo_encode(err, Ls, y, yt, xh);
 
 % ---- reversible embedding of the side information ----
 [stego, pinfo] = pee_embed(uint8(y), aux);

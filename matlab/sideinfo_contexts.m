@@ -1,20 +1,20 @@
-function [ctxE, ctxF, cand] = sideinfo_contexts(Ls, y)
+function [ctxE, ctxF, cand] = sideinfo_contexts(Ls, y, xh)
 % SIDEINFO_CONTEXTS  Contexts for the arithmetic coder. Both sides can
-% compute them: they only depend on the decoder output and the clipped stego.
-%   message errors : 8 confidence bins of |logit|                (1..8)
-%   overflow flags : pixel value (0/255) x neighbours at the same
-%                    extreme (0..4)                               (9..18)
+% compute them: they depend only on the decoder output Ls, the clipped
+% stego y and xh = inverse couplings applied to the clipped stego.
+%   message errors : 8 confidence bins of |logit|                     (1..8)
+%   overflow flags : candidates are pixels at 0 or 255. The context is the
+%                    offset the network applied there, estimated as
+%                    d = xh - y (for 0) or y - xh (for 255), in 4 bins,
+%                    times 2 (pixel value)                              (1..8)
 a = abs(Ls(:));
 edges = [0 0.5 1 1.5 2 3 4 6 inf];
 ctxE = zeros(size(a));
 for k = 1:8, ctxE(a >= edges(k) & a < edges(k+1)) = k; end
-cand = find(y == 0 | y == 255);                       % only these can have overflowed
-[H, W] = size(y);
-yp = padarray(y, [1 1], -1);
-[r, c] = ind2sub([H W], cand);
-r = r + 1; c = c + 1;
+cand = find(y == 0 | y == 255);
 v = y(cand);
-same = (yp(sub2ind(size(yp), r-1, c)) == v) + (yp(sub2ind(size(yp), r+1, c)) == v) + ...
-       (yp(sub2ind(size(yp), r, c-1)) == v) + (yp(sub2ind(size(yp), r, c+1)) == v);
-ctxF = 8 + 1 + same + 5*(v == 255);
+d = xh(cand) - y(cand);
+d(v == 255) = -d(v == 255);                 % positive = pushed outwards
+bin = 1 + (d >= 1) + (d >= 2) + (d >= 4);   % <=0, 1, 2-3, >=4
+ctxF = bin + 4*(v == 255);
 end
