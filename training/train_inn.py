@@ -21,7 +21,8 @@ from scipy.io import savemat
 from inn_model import INN, dwt_haar
 
 p = argparse.ArgumentParser()
-p.add_argument('--msg_ch', type=int, default=1)       # 1 -> 0.25 bpp, 2 -> 0.5 bpp, 4 -> 1 bpp
+p.add_argument('--msg_ch', type=int, default=1)       # message channels on the half-resolution grid
+p.add_argument('--s', type=int, default=2)            # each bit repeated s x s times (same payloads as IC-INN)
 p.add_argument('--mode', default='ours')
 p.add_argument('--iters', type=int, default=6000)
 p.add_argument('--batch', type=int, default=12)
@@ -61,8 +62,16 @@ def batch(n, s):
     return torch.from_numpy(out)
 
 
-def rand_msg(n, s):
-    return (torch.randint(0, 2, (n, a.msg_ch, s // 2, s // 2)).float() - 0.5)
+def rand_bits(n, s):
+    return torch.randint(0, 2, (n, a.msg_ch, s // 2 // a.s, s // 2 // a.s)).float()
+
+
+def bits_to_map(b):
+    return F.interpolate(b - 0.5, scale_factor=a.s, mode='nearest')      # +-0.5
+
+
+def map_to_soft(mr):
+    return F.avg_pool2d(mr, a.s) if a.s > 1 else mr
 
 
 def round_ste(x):                      # quantise to 8 bit, straight-through gradient
@@ -85,14 +94,17 @@ def validate():
     for im in val_imgs:
         h, w = (im.shape[0] // 2) * 2, (im.shape[1] // 2) * 2
         x = torch.from_numpy(im[:h, :w].copy())[None, None].double()
-        m = (torch.randint(0, 2, (1, a.msg_ch, h // 2, w // 2), generator=g).double() - 0.5)
+        h, w = (h // (2 * a.s)) * 2 * a.s, (w // (2 * a.s)) * 2 * a.s
+        bits = torch.randint(0, 2, (1, a.msg_ch, h // 2 // a.s, w // 2 // a.s), generator=g).double()
+        x = x[:, :, :h, :w]
+        m = bits_to_map(bits)
         net.double()
         st, _ = net.embed(x, m)
         stq = torch.clamp(torch.round(st * 255), 0, 255) / 255
         xr, mr = net.reveal(stq)
         mse = ((stq - x) ** 2).mean().item()
         ps.append(10 * math.log10(1 / mse))
-        bers.append(((mr > 0) != (m > 0)).double().mean().item())
+        bers.append(((map_to_soft(mr) > 0).double() != bits).double().mean().item())
         res = torch.round(x * 255) - torch.clamp(torch.round(xr * 255), 0, 255)
         nz.append((res != 0).double().mean().item())
         net.float()
@@ -103,7 +115,8 @@ def validate():
 t0 = time.time()
 for it in range(1, a.iters + 1):
     x = batch(a.batch, a.patch)
-    m = rand_msg(a.batch, a.patch)
+    bits = rand_bits(a.batch, a.patch)
+    m = bits_to_map(bits)
     stego, z = net.embed(x, m)
     l_stego = F.mse_loss(stego, x)
     l_low = F.mse_loss(dwt_haar(stego)[:, :1], dwt_haar(x)[:, :1])
@@ -112,7 +125,7 @@ for it in range(1, a.iters + 1):
     else:
         st_in = round_ste(stego) if use_ste else stego
         xr, mr = net.reveal(st_in)                        # z = 0
-    l_msg = F.mse_loss(mr, m)
+    l_msg = F.mse_loss(map_to_soft(mr), bits - 0.5)
     # message weight starts at 1 and decays to w_msg, otherwise the net never starts hiding anything
     w_msg = a.w_msg + (1 - a.w_msg) * max(0.0, 1 - it / (a.warm * a.iters))
     loss = a.w_stego * l_stego + a.w_low * l_low + w_msg * l_msg
@@ -139,7 +152,7 @@ torch.save(net.state_dict(), a.out + '.pt')
 W = {}
 for k, v in net.state_dict().items():
     W[k.replace('.', '_')] = v.double().numpy()
-W['msg_ch'] = a.msg_ch; W['n_blocks'] = a.blocks; W['hid'] = a.hid; W['clamp'] = 2.0
+W['msg_ch'] = a.msg_ch; W['s'] = a.s; W['n_blocks'] = a.blocks; W['hid'] = a.hid; W['clamp'] = 2.0
 savemat(a.out + '.mat', W)
 json.dump(dict(args=vars(a), log=log), open(a.out + '_log.json', 'w'), indent=1)
 print('saved', a.out)
