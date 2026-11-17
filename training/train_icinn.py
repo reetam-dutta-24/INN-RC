@@ -27,6 +27,7 @@ p.add_argument('--w_msg', type=float, default=10.0)
 p.add_argument('--w_of', type=float, default=5.0)      # overflow penalty
 p.add_argument('--warm', type=float, default=0.25)
 p.add_argument('--noise', type=int, default=1)         # 1 = train with the noise layer
+p.add_argument('--sigma', type=float, default=2.0)     # max Gaussian noise std (grey levels)
 p.add_argument('--scales', default='1,2,4')
 p.add_argument('--seed', type=int, default=1)
 p.add_argument('--data', default='../data/train_urban100')
@@ -63,8 +64,8 @@ def noise_layer(y):
     r = np.random.rand()
     if r < 0.45 or not a.noise:
         return y
-    if r < 0.75:                                    # additive Gaussian noise, sigma 0..4 grey levels
-        return y + torch.randn_like(y) * np.random.uniform(0, 4)
+    if r < 0.75:                                    # additive Gaussian noise, sigma 0..a.sigma grey levels
+        return y + torch.randn_like(y) * np.random.uniform(0, a.sigma)
     if r < 0.9:                                     # salt & pepper, density up to 2 %
         m = (torch.rand_like(y) < np.random.uniform(0, 0.02)).float()
         sp = (torch.rand_like(y) < 0.5).float() * 255
@@ -120,8 +121,8 @@ for it in range(1, a.iters + 1):
     # curriculum: the decoder first learns to read a strong signal (no image loss),
     # then the image and overflow losses are brought in slowly and the stego gets cleaner
     ramp = min(1.0, max(0.0, (it - 0.1 * a.iters) / ((a.warm + 0.25) * a.iters)))
-    w_img = a.w_img * ramp ** 2
-    loss = w_img * l_img + w_msg * l_msg + a.w_of * ramp * l_of
+    w_img = a.w_img * max(ramp ** 2, 0.002)
+    loss = w_img * l_img + w_msg * l_msg + a.w_of * max(ramp, 0.05) * l_of
     opt.zero_grad(); loss.backward()
     torch.nn.utils.clip_grad_norm_(net.parameters(), 5.0)
     opt.step(); sched.step()
