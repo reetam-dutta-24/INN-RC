@@ -32,6 +32,7 @@ p.add_argument('--blocks', type=int, default=4)
 p.add_argument('--w_stego', type=float, default=1.0)
 p.add_argument('--w_low', type=float, default=1.0)
 p.add_argument('--w_msg', type=float, default=0.02)
+p.add_argument('--warm', type=float, default=0.3)       # fraction of iterations with boosted message weight
 p.add_argument('--w_cov', type=float, default=4.0)
 p.add_argument('--w_z', type=float, default=0.05)
 p.add_argument('--seed', type=int, default=1)
@@ -112,7 +113,9 @@ for it in range(1, a.iters + 1):
         st_in = round_ste(stego) if use_ste else stego
         xr, mr = net.reveal(st_in)                        # z = 0
     l_msg = F.mse_loss(mr, m)
-    loss = a.w_stego * l_stego + a.w_low * l_low + a.w_msg * l_msg
+    # message weight starts at 1 and decays to w_msg, otherwise the net never starts hiding anything
+    w_msg = a.w_msg + (1 - a.w_msg) * max(0.0, 1 - it / (a.warm * a.iters))
+    loss = a.w_stego * l_stego + a.w_low * l_low + w_msg * l_msg
     if use_cov:
         l_cov = F.mse_loss(xr, x)
         l_z = (z ** 2).mean()
