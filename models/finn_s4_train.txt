@@ -1,0 +1,27 @@
+92 train / 8 val images, mode=ours, msg_ch=1
+it     1  loss 0.26236  stegoPSNR 120.00  msgMSE 0.2500       0s
+it   250  loss 0.00446  stegoPSNR 25.99  msgMSE 0.0011      94s
+it   500  loss 0.00262  stegoPSNR 31.20  msgMSE 0.0021     182s
+it   750  loss 0.00076  stegoPSNR 34.92  msgMSE 0.0004     270s
+it  1000  loss 0.00082  stegoPSNR 35.22  msgMSE 0.0005     357s  | val PSNR 37.48  BER 0.0000  residual!=0 0.5697
+it  1250  loss 0.00033  stegoPSNR 38.78  msgMSE 0.0003     474s
+it  1500  loss 0.00047  stegoPSNR 38.28  msgMSE 0.0007     559s
+it  1750  loss 0.00013  stegoPSNR 43.24  msgMSE 0.0009     641s
+it  2000  loss 0.00015  stegoPSNR 42.44  msgMSE 0.0015     721s  | val PSNR 43.78  BER 0.0001  residual!=0 0.4577
+it  2250  loss 0.00017  stegoPSNR 43.20  msgMSE 0.0019     832s
+it  2500  loss 0.00009  stegoPSNR 44.79  msgMSE 0.0008     914s
+it  2750  loss 0.00007  stegoPSNR 46.11  msgMSE 0.0009     996s
+it  3000  loss 0.00009  stegoPSNR 45.15  msgMSE 0.0012    1080s  | val PSNR 44.45  BER 0.0001  residual!=0 0.4561
+it  3250  loss 0.00011  stegoPSNR 44.24  msgMSE 0.0012    1191s
+it  3500  loss 0.00008  stegoPSNR 45.68  msgMSE 0.0009    1273s
+it  3750  loss 0.00009  stegoPSNR 45.14  msgMSE 0.0011    1355s
+it  4000  loss 0.00009  stegoPSNR 45.70  msgMSE 0.0015    1438s  | val PSNR 44.42  BER 0.0000  residual!=0 0.4301
+it  4250  loss 0.00009  stegoPSNR 45.81  msgMSE 0.0012    1547s
+it  4500  loss 0.00013  stegoPSNR 44.17  msgMSE 0.0014    1629s
+it  4750  loss 0.00014  stegoPSNR 44.34  msgMSE 0.0012    1714s
+it  5000  loss 0.00010  stegoPSNR 44.91  msgMSE 0.0012    1802s  | val PSNR 44.68  BER 0.0000  residual!=0 0.4229
+it  5250  loss 0.00009  stegoPSNR 45.30  msgMSE 0.0011    1915s
+it  5500  loss 0.00007  stegoPSNR 46.33  msgMSE 0.0007    1999s
+it  5750  loss 0.00013  stegoPSNR 44.04  msgMSE 0.0013    2085s
+it  6000  loss 0.00012  stegoPSNR 44.03  msgMSE 0.0014    2170s  | val PSNR 44.74  BER 0.0000  residual!=0 0.4167
+saved ../models/finn_s4
