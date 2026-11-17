@@ -2,3 +2,9 @@
 __pycache__/
 *.asv
 results/tmp/
+*.aux
+*.log
+*.blg
+*.bbl
+*.out
+submission/

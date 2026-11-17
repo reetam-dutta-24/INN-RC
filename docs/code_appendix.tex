@@ -1,0 +1,17 @@
+\documentclass[9pt,a4paper]{extarticle}
+\usepackage[margin=1.8cm,headheight=26pt,headsep=8pt]{geometry}
+\usepackage{times}
+\usepackage{listings}
+\usepackage{xcolor}
+\input{header.tex}
+\pagestyle{uct}
+\lstset{language=Matlab, basicstyle=\ttfamily\scriptsize, breaklines=true, columns=fullflexible,
+  keywordstyle=\color{blue!60!black}, commentstyle=\color{green!40!black}, stringstyle=\color{purple!70!black},
+  frame=single, rulecolor=\color{gray!50}, numbers=left, numberstyle=\tiny\color{gray}, showstringspaces=false}
+\begin{document}
+\thispagestyle{uct}
+\section*{Appendix: MATLAB source code (M-files)}
+The complete project (M-files, Python training scripts, trained weights, data and result files) is submitted along
+with this PDF. The listings below are the M-files in the \texttt{matlab/} folder.
+\input{code_list.tex}
+\end{document}
