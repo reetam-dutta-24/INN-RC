@@ -19,6 +19,30 @@ stego image is distorted (noise, JPEG) the cover is lost, but most of the messag
 5. The receiver undoes PEE, reads the message, fixes the wrong bits with the side information and runs
    the couplings backwards to get the cover.
 
+## Results (132 test images, 256x256)
+
+All numbers come from `results/*.csv` (see `tools/make_figures.py`).
+
+| Payload | Method | PSNR (dB) | SSIM | Side info (bits) | Embedded & exact |
+|---|---|---|---|---|---|
+| 256 bits | Rhombus PEE | 71.64 | 0.9999 | - | 132/132 |
+| 256 bits | IC-INN-Q (ours) | 49.92 | 0.9960 | 365 | 131/132 |
+| 256 bits | IC-INN-R (ours) | 49.03 | 0.9955 | 429 | 131/132 |
+| 1024 bits | Rhombus PEE | 65.32 | 0.9998 | - | 132/132 |
+| 1024 bits | IC-INN-Q (ours) | 49.05 | 0.9949 | 561 | 131/132 |
+| 1024 bits | IC-INN-R (ours) | 47.57 | 0.9940 | 610 | 128/132 |
+| 4096 bits | Rhombus PEE | 57.84 | 0.9991 | - | 129/132 |
+| 4096 bits | IC-INN-Q (ours) | 45.73 | 0.9896 | 1659 | 123/132 |
+| 4096 bits | IC-INN-R (ours) | 42.94 | 0.9821 | 928 | 112/132 |
+
+* Every image that could be embedded was recovered **bit for bit** (cover and message, BER = 0),
+  checked with `isequal`.
+* Float INN + residual compensation (baseline): the residual touches about 36% of the pixels and needs
+  about 112k bits of side information, so none of the 132 images could be embedded reversibly.
+* Lossy channel, 1024 bits, IC-INN-R: BER 1.76% under Gaussian noise (sigma 2),
+  4.03% under 1% salt & pepper, 5.07% under JPEG 95. Classical PEE: about 50%.
+  JPEG 90 and below breaks the message (JPEG is not in the training noise layer).
+
 ## Folder layout
 
 ```
