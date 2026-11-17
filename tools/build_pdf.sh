@@ -16,6 +16,7 @@ echo "paper: $(pdfinfo main.pdf | grep Pages)"
 
 cd "$ROOT/docs"
 pdflatex -interaction=nonstopmode literature_review.tex > /dev/null
+pdflatex -interaction=nonstopmode supplementary.tex > /dev/null
 : > code_list.tex
 for f in "$ROOT"/matlab/*.m; do
   b=$(basename "$f")
@@ -28,7 +29,7 @@ echo "code appendix: $(pdfinfo code_appendix.pdf | grep Pages)"
 
 mkdir -p "$ROOT/submission"
 cp "$ROOT/paper/main.pdf" "$ROOT/submission/Group${GROUP}_${NAME}_IEEE_paper.pdf"
-pdfunite "$ROOT/paper/main.pdf" "$ROOT/docs/literature_review.pdf" "$ROOT/docs/code_appendix.pdf" \
+pdfunite "$ROOT/paper/main.pdf" "$ROOT/docs/supplementary.pdf" "$ROOT/docs/literature_review.pdf" "$ROOT/docs/code_appendix.pdf" \
          "$ROOT/submission/Group${GROUP}_${NAME}.pdf"
 echo "combined: $(pdfinfo "$ROOT/submission/Group${GROUP}_${NAME}.pdf" | grep Pages)"
-rm -f "$ROOT"/paper/*.aux "$ROOT"/paper/*.log "$ROOT"/paper/*.blg "$ROOT"/paper/*.out "$ROOT"/docs/*.aux "$ROOT"/docs/*.log "$ROOT"/docs/*.out
+rm -f "$ROOT"/paper/*.log "$ROOT"/paper/*.blg "$ROOT"/docs/*.log
