@@ -60,7 +60,7 @@ while true
             error('pee_embed:overflow', 'overflow list did not converge');
         end
         if need > capTotal
-            error('pee_embed:capacity', 'capacity exceeded: pass needs %3$d header bits but only %2$d are embeddable (layer %1$d, overflow list %4$d)', layer, capTotal, fixed, numel(list));
+            error('pee_embed:capacity', 'capacity exceeded at layer %d: %d embeddable bits, %d needed for header/overflow list (%d pixels)', layer, capTotal, fixed, numel(list));
         end
         J(c) = v;                                   % apply the pre-adjustment
         more = (layer > 1) && (setId == 1);
