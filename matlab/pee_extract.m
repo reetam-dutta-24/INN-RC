@@ -7,23 +7,27 @@ chunks = {};
 more = true;
 while more
     for setId = [1 0]                      % undo dot pass first, then cross
-        [cand, pred, order] = pee_setup(I, setId);
-        c = cand(order);
+        [cand, pred, order, mir] = pee_setup(I, setId);
+        c = cand(order); mr = mir(order);
         v = I(c); e = v - pred(order);
-        expandable = (e >= -2 & e <= 1);
-        b = (e == 1 | e == -2);
+        expandable = (~mr & e >= -2 & e <= 1) | (mr & e >= -1 & e <= 2);
+        b = (~mr & (e == 1 | e == -2)) | (mr & (e == -1 | e == 2));
         % header: first 24 bits carried by the first expandable pixels
         exIdx = find(expandable);
         hdr = b(exIdx(1:24));
         n = bin2dec_vec(hdr);
         stopAt = exIdx(n);
         k = 1:stopAt;
-        ek = e(k);
+        ek = e(k); mk = mr(k); sd = ~mk;
         eo = ek;
-        eo(ek >= 2)  = ek(ek >= 2) - 1;
-        eo(ek <= -3) = ek(ek <= -3) + 1;
-        eo(ek == 0 | ek == 1)   = 0;
-        eo(ek == -1 | ek == -2) = -1;
+        eo(sd & ek >= 2)  = ek(sd & ek >= 2) - 1;
+        eo(sd & ek <= -3) = ek(sd & ek <= -3) + 1;
+        eo(sd & (ek == 0 | ek == 1))   = 0;
+        eo(sd & (ek == -1 | ek == -2)) = -1;
+        eo(mk & ek <= -2) = ek(mk & ek <= -2) + 1;
+        eo(mk & ek >= 3)  = ek(mk & ek >= 3) - 1;
+        eo(mk & (ek == -1 | ek == 0)) = 0;
+        eo(mk & (ek == 1 | ek == 2))  = 1;
         I(c(k)) = v(k) - ek + eo;
         payload = b(exIdx(1:n))';
         if setId == 1, more = payload(25); end

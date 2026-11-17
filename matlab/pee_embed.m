@@ -29,8 +29,8 @@ while true
         error('pee_embed:capacity', 'payload too large: %d of %d bits left after %d layers', nb - pos, nb, maxLayers);
     end
     for setId = [0 1]
-        [cand, pred, order] = pee_setup(J, setId);
-        c = cand(order); pr = pred(order);
+        [cand, pred, order, mir] = pee_setup(J, setId);
+        c = cand(order); pr = pred(order); mr = mir(order);
         v0 = J(c);
         % only pixels that are actually visited can overflow, so the list is
         % built for the visited prefix; iterate because the list length
@@ -39,12 +39,13 @@ while true
         for it = 1:20
             v = v0;
             e = v - pr;
-            riskAll = (v == 0 & e <= -1) | (v == 255 & e >= 0);
+            riskAll = (~mr & ((v == 0 & e <= -1) | (v == 255 & e >= 0))) | ...
+                      ( mr & ((v == 255 & e >= 1) | (v == 0 & e <= 0)));
             listBits = gamma_encode(diff([0; sort(list(:))])');
             fixed = hdrLen + numel(listBits);
             v(ismember(c, list) & v == 0) = 1; v(ismember(c, list) & v == 255) = 254;
             e = v - pr;
-            expandable = (e == 0 | e == -1);
+            expandable = (e == 0) | (~mr & e == -1) | (mr & e == 1);
             capTotal = sum(expandable);
             room = max(capTotal - fixed, 0);
             take = min(room, nb - pos);
@@ -69,14 +70,19 @@ while true
         pos = pos + take;
         % embed sequentially in sorted order until payload is used up
         k = 1:stopAt;
-        ek = e(k); exk = expandable(k);
+        ek = e(k); exk = expandable(k); mk = mr(k);
         b = zeros(size(ek));
         b(exk) = payload(1:sum(exk));
         en = ek;
-        en(ek >= 1)  = ek(ek >= 1) + 1;
-        en(ek <= -2) = ek(ek <= -2) - 1;
-        en(ek == 0)  = b(ek == 0);
-        en(ek == -1) = -1 - b(ek == -1);
+        sd = ~mk;                                  % usual rule (dark side)
+        en(sd & ek >= 1)  = ek(sd & ek >= 1) + 1;
+        en(sd & ek <= -2) = ek(sd & ek <= -2) - 1;
+        en(sd & ek == 0)  = b(sd & ek == 0);
+        en(sd & ek == -1) = -1 - b(sd & ek == -1);
+        en(mk & ek <= -1) = ek(mk & ek <= -1) - 1;  % mirrored rule (bright side)
+        en(mk & ek >= 2)  = ek(mk & ek >= 2) + 1;
+        en(mk & ek == 0)  = -b(mk & ek == 0);
+        en(mk & ek == 1)  = 1 + b(mk & ek == 1);
         J(c(k)) = v(k) - ek + en;
         info.passBits(end+1) = numel(payload);
     end
