@@ -1,0 +1,16 @@
+\begin{table*}[t]
+\centering
+\caption{Comparison at 1024 bits (0.0156 bpp) over all test images. Success = embedding possible; Exact = cover and message recovered bit for bit; lossy-channel BER for Gaussian noise ($\sigma{=}2$) and 1\% salt-and-pepper noise. Times are MATLAB/Octave on a 2-core CPU. $^\dagger$PSNR of the INN stego before PEE; its side information never fits.}
+\label{tab:compare}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccccc}
+\toprule
+Method & Params & PSNR (dB) & SSIM & Aux (bits) & Success & Exact & BER GN2 (\%) & BER S\&P1 (\%) & Embed / extract (s)\\
+\midrule
+Rhombus PEE & 0 & 65.32 & 0.9998 & -- & 132/132 & 132/132 & 49.87 & 48.99 & 0.02 / 0.02\\
+Float INN + RC (baseline) & 128.7k & 46.07$^\dagger$ & -- & 111.7k & 0/132 & 0/132 & -- & -- & -- \\
+IC-INN-Q (ours) & 62.9k & 49.05 & 0.9949 & 561 & 131/132 & 131/132 & 3.22 & 6.10 & 0.51 / 0.51\\
+IC-INN-R (ours) & 62.9k & 47.57 & 0.9940 & 610 & 128/132 & 128/132 & 1.76 & 4.03 & 0.51 / 0.51\\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,24 @@
+\begin{table*}[t]
+\centering
+\caption{Lossless results per test set and payload (mean over images). Aux = side-information bits embedded by PEE; Exact = images whose cover \emph{and} message were recovered bit for bit. Lossless BER was 0 and NC was 1 for every exact case.}
+\label{tab:main}
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lcc|ccc|cccc|cccc}
+\toprule
+& & & \multicolumn{3}{c|}{Rhombus PEE \cite{sachnev2009}} & \multicolumn{4}{c|}{IC-INN-Q (ours)} & \multicolumn{4}{c}{IC-INN-R (ours)}\\
+Set & Bits & bpp & PSNR & SSIM & Exact & PSNR & SSIM & Aux & Exact & PSNR & SSIM & Aux & Exact\\
+\midrule
+BSD100 & 256 & 0.0039 & 71.30 & 0.9999 & 100/100 & 49.87 & 0.9971 & 310 & 99/100 & 48.96 & 0.9965 & 327 & 99/100\\
+ & 1024 & 0.0156 & 64.91 & 0.9998 & 100/100 & 49.00 & 0.9960 & 459 & 99/100 & 47.52 & 0.9948 & 499 & 98/100\\
+ & 4096 & 0.0625 & 57.24 & 0.9991 & 98/100 & 45.69 & 0.9904 & 1608 & 95/100 & 42.87 & 0.9827 & 980 & 89/100\\
+\midrule
+Kodak & 256 & 0.0039 & 71.98 & 0.9999 & 24/24 & 50.25 & 0.9966 & 334 & 24/24 & 49.33 & 0.9959 & 353 & 24/24\\
+ & 1024 & 0.0156 & 65.88 & 0.9998 & 24/24 & 49.31 & 0.9954 & 438 & 24/24 & 47.79 & 0.9936 & 535 & 24/24\\
+ & 4096 & 0.0625 & 58.70 & 0.9991 & 23/24 & 46.03 & 0.9895 & 1191 & 23/24 & 43.15 & 0.9797 & 731 & 22/24\\
+\midrule
+DICOM & 256 & 0.0039 & 74.77 & 1.0000 & 8/8 & 49.51 & 0.9799 & 1137 & 8/8 & 49.09 & 0.9820 & 1918 & 8/8\\
+ & 1024 & 0.0156 & 68.78 & 0.9998 & 8/8 & 48.87 & 0.9802 & 2191 & 8/8 & 47.50 & 0.9817 & 2730 & 6/8\\
+ & 4096 & 0.0625 & 62.63 & 0.9989 & 8/8 & 45.23 & 0.9738 & 4791 & 5/8 & 43.94 & 0.9789 & 640 & 1/8\\
+\bottomrule
+\end{tabular}
+\end{table*}

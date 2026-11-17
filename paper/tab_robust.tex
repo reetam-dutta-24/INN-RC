@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Message BER (\%) on a lossy channel, payload 1024 bits, 50 images. The cover is not recoverable here; the question is only how many message bits survive.}
+\label{tab:robust}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+Attack & PEE & Float INN & IC-INN-Q & IC-INN-R\\
+\midrule
+none & 0.00 & -- & 1.78 & 1.16\\
+GN $\sigma{=}1$ & 50.17 & -- & 2.07 & 1.26\\
+GN $\sigma{=}2$ & 49.87 & -- & 3.22 & 1.76\\
+GN $\sigma{=}3$ & 50.05 & -- & 6.30 & 3.62\\
+S\&P 0.5\% & 48.29 & -- & 3.35 & 2.17\\
+S\&P 1\% & 48.99 & -- & 6.10 & 4.03\\
+JPEG 95 & 50.15 & -- & 12.14 & 5.07\\
+JPEG 90 & 50.47 & -- & 38.74 & 36.07\\
+JPEG 80 & 50.04 & -- & 47.02 & 46.10\\
+\bottomrule
+\end{tabular}
+\end{table}

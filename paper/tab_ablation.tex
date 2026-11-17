@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Mean side-information size (bits) for four coding choices. A0: raw flags; A1: arithmetic coding without contexts; A2: confidence contexts for message errors, neighbourhood contexts for overflow; A3: proposed (predicted-offset contexts, coded magnitudes).}
+\label{tab:ablation}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrr}
+\toprule
+Bits & Set & A0 & A1 & A2 & A3\\
+\midrule
+1024 & BSD100 & 1663 & 824 & 703 & 397\\
+1024 & Kodak & 1716 & 806 & 703 & 365\\
+1024 & DICOM & 19396 & 18108 & 15325 & 2150\\
+1024 & All & 2747 & 1869 & 1589 & 497\\
+4096 & BSD100 & 4843 & 2313 & 1938 & 1686\\
+4096 & Kodak & 4898 & 2087 & 1724 & 1469\\
+4096 & DICOM & 26542 & 22650 & 18292 & 8520\\
+4096 & All & 6168 & 3504 & 2891 & 2061\\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -131,10 +131,10 @@ plt.close(fig)
 # ---------- visual examples ----------
 vis = os.path.join(RES, 'visual')
 if os.path.isdir(vis):
-    names = ['kodim23', 'bsd_010', 'med05_CR', 'med03_MR']
+    names = ['kodim23', 'bsd_010', 'med05_CR']
     cols = ['cover', 'stego', 'diff20', 'recovered']
     titles = ['cover', 'stego', '|stego-cover| x20', 'recovered']
-    fig, ax = plt.subplots(len(names), 4, figsize=(3.45, 3.55))
+    fig, ax = plt.subplots(len(names), 4, figsize=(3.45, 2.7))
     for i, n in enumerate(names):
         for j, c in enumerate(cols):
             im = np.array(Image.open(os.path.join(vis, f'{n}_{c}.png')))
@@ -198,16 +198,22 @@ ridx = {'PEE': 0, 'BASE': 1, 'PROP': 2, 'PROPR': 3}
 with open(os.path.join(TAB, 'tab_compare.tex'), 'w') as f:
     f.write('\\begin{table*}[t]\n\\centering\n\\caption{Comparison at 1024 bits (0.0156 bpp) over all test images. '
             'Success = embedding possible; Exact = cover and message recovered bit for bit; lossy-channel BER for '
-            'Gaussian noise ($\\sigma{=}2$) and JPEG (Q 90). Times are MATLAB/Octave on a 2-core CPU.}\n'
+            'Gaussian noise ($\\sigma{=}2$) and 1\\% salt-and-pepper noise. Times are MATLAB/Octave on a 2-core CPU. $^\\dagger$PSNR of the INN stego before PEE; its side information never fits.}\n'
             '\\label{tab:compare}\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lccccccccc}\n\\toprule\n'
-            'Method & Params & PSNR (dB) & SSIM & Aux (bits) & Success & Exact & BER GN2 (\\%) & BER JPEG90 (\\%) & Embed / extract (s)\\\\\n\\midrule\n')
+            'Method & Params & PSNR (dB) & SSIM & Aux (bits) & Success & Exact & BER GN2 (\\%) & BER S\\&P1 (\\%) & Embed / extract (s)\\\\\n\\midrule\n')
+    bap = os.path.join(RES, 'baseline_aux.csv')
+    BA = pd.read_csv(bap) if os.path.exists(bap) else None
     for m in ['PEE', 'BASE', 'PROP', 'PROPR']:
         q = B[(B.method == m) & (B.s == 4)]
         if len(q) == 0:
             continue
         ok = q[q.ok == 1]
+        if m == 'BASE' and BA is not None and len(ok) == 0:
+            f.write(f"{NAME[m]} & {PARAMS[m]} & {fmt(BA.psnr_inn.mean())}$^\\dagger$ & -- & {BA.aux_bits.mean()/1000:.1f}k & "
+                    f"0/{len(q)} & 0/{len(q)} & -- & -- & -- \\\\\n")
+            continue
         g2 = rob.get('gauss2', [np.nan] * 4)[ridx[m]]
-        j90 = rob.get('jpeg90', [np.nan] * 4)[ridx[m]]
+        j90 = rob.get('sp0.01', [np.nan] * 4)[ridx[m]]
         f.write(f"{NAME[m]} & {PARAMS[m]} & {fmt(ok.psnr.mean())} & {fmt(ok.ssim.mean(), 4)} & "
                 f"{'--' if m == 'PEE' else fmt(ok.aux_bits.mean(), 0)} & {int(q.ok.sum())}/{len(q)} & "
                 f"{int(q.exact_cover.sum())}/{len(q)} & {fmt(g2)} & {fmt(j90)} & "
@@ -250,6 +256,12 @@ if 'robust' in summary:
         for m, val in zip(['PEE', 'BASE', 'Q', 'R'], v):
             if not pd.isna(val):
                 mac[f'rob{kk}{m}'] = f'{val:.2f}'
+bap = os.path.join(RES, 'baseline_aux.csv')
+if os.path.exists(bap):
+    BA = pd.read_csv(bap)
+    mac['auxBASE'] = f'{BA.aux_bits.mean()/1000:.1f}k'; mac['pinnBASE'] = f'{BA.psnr_inn.mean():.2f}'
+    mac['resBASE'] = f'{100*BA.res_nonzero.mean():.0f}'; mac['capPEE'] = f'{BA.pee_capacity.mean()/1000:.1f}k'
+    mac['auxRatio'] = f'{BA.aux_bits.mean()/summary["PROP"]["s4"]["aux"]:.0f}'
 with open(os.path.join(TAB, 'numbers.tex'), 'w') as f:
     for k, v in sorted(mac.items()):
         f.write(f'\\newcommand{{\\{k}}}{{{v}}}\n')
