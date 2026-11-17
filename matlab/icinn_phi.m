@@ -4,5 +4,5 @@ function off = icinn_phi(P, half, M)
 h = cat(3, half / 255, M);
 h = lrelu(conv3x3(h, P.W{1}, P.b{1}));
 h = lrelu(conv3x3(h, P.W{2}, P.b{2}));
-off = 8 * conv3x3(h, P.W{3}, P.b{3});
+off = 16 * tanh(0.5 * conv3x3(h, P.W{3}, P.b{3}));   % bounded to +-16 grey levels
 end

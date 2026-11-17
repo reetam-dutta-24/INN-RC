@@ -49,7 +49,9 @@ class Phi(nn.Module):
         h = torch.cat([half / 255.0, M], 1)
         h = F.leaky_relu(self.c1(h), 0.2)
         h = F.leaky_relu(self.c2(h), 0.2)
-        return 8.0 * self.c3(h)                # offsets in grey levels (x8 so the message is visible at start)
+        # offsets in grey levels, bounded to +-16 so training can never blow up;
+        # ~8*c3 for small values so the message is visible from the start
+        return 16.0 * torch.tanh(0.5 * self.c3(h))
 
 
 class Decoder(nn.Module):
