@@ -1,4 +1,4 @@
-function run_benchmark(maxPerSet)
+function run_benchmark(maxPerSet, useMethods, outName)
 % RUN_BENCHMARK  Lossless benchmark on all test images.
 %   Methods : PEE   - rhombus PEE embedding the message directly (classical)
 %             BASE  - float INN + residual compensation (baseline, s = 4 model)
@@ -7,17 +7,19 @@ function run_benchmark(maxPerSet)
 %   Payload : s = 8, 4, 2  ->  256, 1024, 4096 bits on a 256x256 image
 %   Output  : ../results/benchmark.csv (one row per image / method / payload)
 if nargin < 1, maxPerSet = inf; end
+if nargin < 2, useMethods = {'PEE', 'PROP', 'PROPR', 'BASE'}; end
+if nargin < 3, outName = 'benchmark.csv'; end
 if exist('OCTAVE_VERSION', 'builtin'), pkg load image; end
 root = fileparts(fileparts(mfilename('fullpath')));
 sets = {'test_bsd100', 'test_kodak', 'test_medical'};
 key = 20261127;
 prop = icinn_load(fullfile(root, 'models', 'icinn.mat'));
-propR = icinn_load(fullfile(root, 'models', 'icinn_r.mat'));
+if any(strcmp(useMethods, 'PROPR')), propR = icinn_load(fullfile(root, 'models', 'icinn_r.mat')); end
 baseFile = fullfile(root, 'models', 'finn_s4.mat');
-haveBase = exist(baseFile, 'file') == 2;
+haveBase = exist(baseFile, 'file') == 2 && any(strcmp(useMethods, 'BASE'));
 if haveBase, base = finn_load(baseFile); end
 if ~exist(fullfile(root, 'results'), 'dir'), mkdir(fullfile(root, 'results')); end
-fid = fopen(fullfile(root, 'results', 'benchmark.csv'), 'w');
+fid = fopen(fullfile(root, 'results', outName), 'w');
 fprintf(fid, 'set,image,method,s,bits,bpp,psnr,ssim,aux_bits,layers,exact_cover,ber,nc,psnr_inn,ber_inn,t_embed,t_extract,ok\n');
 for d = 1:numel(sets)
     files = dir(fullfile(root, 'data', sets{d}, '*.png'));
@@ -26,7 +28,7 @@ for d = 1:numel(sets)
         for s = [8 4 2]
             nb = (size(I,1)/2/s) * (size(I,2)/2/s);
             rand('seed', 1000*d + i + s); msg = rand(nb, 1) > 0.5;   %#ok<RAND>
-            methods = {'PEE', 'PROP', 'PROPR'};
+            methods = intersect({'PEE', 'PROP', 'PROPR'}, useMethods, 'stable');
             if haveBase && s == base.s, methods{end+1} = 'BASE'; end %#ok<AGROW>
             for m = 1:numel(methods)
                 r = struct('psnr', NaN, 'ssim', NaN, 'aux', NaN, 'layers', NaN, 'exact', 0, ...
