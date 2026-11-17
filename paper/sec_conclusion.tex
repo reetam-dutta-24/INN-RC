@@ -1,0 +1,20 @@
+\section{Conclusion and Future Scope}
+We presented INN-RC, a lossless steganography scheme in which an integer coupling network is conditioned on the
+message instead of taking it as an input. Because every coupling step is an integer addition driven by the other pixel
+half and the message, the cover is recovered exactly once the message is known, and the only residual that has to be
+compensated is the set of wrongly decoded bits and the clipped pixels. Coding this residual with contexts the receiver
+can rebuild (decoder confidence and the re-estimated coupling offset) keeps it smaller than the message itself.
+
+\textbf{Exact reversibility.} In all \exactQ{} successful IC-INN-Q runs and \exactR{} IC-INN-R runs on \nImgs{} test
+images, the recovered cover was identical to the original pixel for pixel and the extracted message had BER $=0$
+(NC $=1$), which we verified with \texttt{isequal} in MATLAB rather than with a PSNR threshold.
+
+\textbf{Limitations.} (i) On a guaranteed lossless channel classical PEE still gives a higher PSNR at these payloads;
+our scheme pays for robustness with image quality. (ii) At 4096 bits a few busy or noisy dark images cannot hold the
+side information and embedding is refused. (iii) The receiver must reproduce the rounded coupling offsets exactly, so
+sender and receiver should run the same floating-point code; a fixed-point network would remove this assumption.
+(iv) We work on 8-bit grayscale images and converted the DICOM scans to 8 bits, and BOSSbase could not be included.
+
+\textbf{Future work.} Fixed-point (integer-only) coupling networks for platform-independent decoding, native 12/16-bit
+DICOM and colour images, a learned predictor for the PEE stage to increase its capacity, larger payloads through a
+multi-scale message map, and testing against deep steganalysers.
