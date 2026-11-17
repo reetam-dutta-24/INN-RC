@@ -42,6 +42,8 @@ rows = []
 for st in ['BSD100', 'Kodak', 'DICOM']:
     for s in [8, 4, 2]:
         sub = B[(B.set == st) & (B.s == s)]
+        if len(sub) == 0:
+            continue
         r = [st if s == 8 else '', f'{int(sub.bits.iloc[0])}', f'{sub.bpp.iloc[0]:.4f}']
         for m in ['PEE', 'PROP', 'PROPR']:
             q = sub[sub.method == m]
@@ -162,5 +164,69 @@ if os.path.exists(ap):
         f.write('\\bottomrule\n\\end{tabular}\n\\end{table}\n')
     summary['robust'] = rob
 
+# ---------- side-information ablation ----------
+abl = {}
+lines = []
+for s_ in [4, 2]:
+    ap2 = os.path.join(RES, f'ablation_aux_s{s_}.csv')
+    if not os.path.exists(ap2):
+        continue
+    Ab = pd.read_csv(ap2); Ab['set'] = Ab['set'].map(SETNAME)
+    for st in ['BSD100', 'Kodak', 'DICOM', 'All']:
+        q = Ab if st == 'All' else Ab[Ab.set == st]
+        vals = [q[c].mean() for c in ['A0', 'A1', 'A2', 'A3']]
+        abl[f's{s_}_{st}'] = vals + [q.n_ovf.mean(), q.n_err.mean()]
+        if len(q) == 0:
+            continue
+        lines.append(f'{int(q.bits.iloc[0])} & {st} & ' + ' & '.join(fmt(v, 0) for v in vals) + '\\\\')
+if lines:
+    with open(os.path.join(TAB, 'tab_ablation.tex'), 'w') as f:
+        f.write('\\begin{table}[t]\n\\centering\n\\caption{Mean side-information size (bits) for four coding choices. '
+                'A0: raw flags; A1: arithmetic coding without contexts; A2: confidence contexts for message errors, '
+                'neighbourhood contexts for overflow; A3: proposed (predicted-offset contexts, coded magnitudes).}\n'
+                '\\label{tab:ablation}\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{llrrrr}\n\\toprule\n'
+                'Bits & Set & A0 & A1 & A2 & A3\\\\\n\\midrule\n')
+        f.write('\n'.join(lines) + '\n\\bottomrule\n\\end{tabular}\n\\end{table}\n')
+summary['ablation'] = abl
+
 json.dump(summary, open(os.path.join(RES, 'summary.json'), 'w'), indent=1)
+
+# ---------- LaTeX macros with every number quoted in the text ----------
+W = {8: 'eight', 4: 'four', 2: 'two'}
+MN = {'PEE': 'PEE', 'PROP': 'Q', 'PROPR': 'R', 'BASE': 'BASE'}
+mac = {}
+mac['nImgs'] = str(B.groupby(['set', 'image']).ngroups)
+for m, tag in MN.items():
+    if m not in summary:
+        continue
+    d = summary[m]
+    mac[f'runs{tag}'] = str(d['n']); mac[f'ok{tag}'] = str(d['ok']); mac[f'exact{tag}'] = str(d['exact'])
+    mac[f'fail{tag}'] = str(d['n'] - d['ok'])
+    for sv, w in W.items():
+        if f's{sv}' in d:
+            e = d[f's{sv}']
+            mac[f'psnr{tag}{w}'] = f"{e['psnr']:.2f}"; mac[f'ssim{tag}{w}'] = f"{e['ssim']:.4f}"
+            if m != 'PEE':
+                mac[f'aux{tag}{w}'] = f"{e['aux']:.0f}"; mac[f'pinn{tag}{w}'] = f"{e['psnr_inn']:.2f}"
+                mac[f'berinn{tag}{w}'] = f"{100*e['ber_inn']:.2f}"
+            mac[f'temb{tag}{w}'] = f"{e['te']:.2f}"; mac[f'text{tag}{w}'] = f"{e['tx']:.2f}"
+if 'ablation' in summary and 's4_All' in summary['ablation']:
+    a = summary['ablation']['s4_All']
+    for i, k in enumerate(['A', 'B', 'C', 'D']):
+        mac[f'abl{k}'] = f'{a[i]:.0f}'
+    mac['ablRatio'] = f'{a[0]/a[3]:.1f}'; mac['ablRatioNb'] = f'{a[2]/a[3]:.1f}'
+    if 's4_DICOM' in summary['ablation']:
+        dm = summary['ablation']['s4_DICOM']
+        mac['ablDicomC'] = f'{dm[2]:.0f}'; mac['ablDicomD'] = f'{dm[3]:.0f}'
+if 'robust' in summary:
+    for k, v in summary['robust'].items():
+        kk = ''.join(ch for ch in k if ch.isalpha()) + {'0': 'zero', '1': 'one', '2': 'two', '3': 'three', '0.005': 'sphalf',
+              '0.01': 'spone', '95': 'nf', '90': 'ninety', '80': 'eighty'}.get(k.lstrip('abcdefghijklmnopqrstuvwxyz'), '')
+        for m, val in zip(['PEE', 'BASE', 'Q', 'R'], v):
+            if not pd.isna(val):
+                mac[f'rob{kk}{m}'] = f'{val:.2f}'
+with open(os.path.join(TAB, 'numbers.tex'), 'w') as f:
+    for k, v in sorted(mac.items()):
+        f.write(f'\\newcommand{{\\{k}}}{{{v}}}\n')
+print(len(mac), 'macros')
 print(json.dumps(summary, indent=1)[:4000])

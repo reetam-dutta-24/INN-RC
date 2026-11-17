@@ -39,10 +39,11 @@ p.add_argument('--w_z', type=float, default=0.05)
 p.add_argument('--seed', type=int, default=1)
 p.add_argument('--data', default='../data/train_urban100')
 p.add_argument('--out', default='../models/inn')
+p.add_argument('--threads', type=int, default=0)
 a = p.parse_args()
 
 torch.manual_seed(a.seed); np.random.seed(a.seed)
-torch.set_num_threads(os.cpu_count())
+torch.set_num_threads(a.threads or os.cpu_count())
 
 files = sorted(glob.glob(os.path.join(a.data, '*.png')))
 imgs = [np.array(Image.open(f).convert('L'), dtype=np.float32) / 255 for f in files]
