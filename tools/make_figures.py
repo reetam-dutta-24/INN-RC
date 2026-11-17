@@ -191,6 +191,29 @@ if lines:
         f.write('\n'.join(lines) + '\n\\bottomrule\n\\end{tabular}\n\\end{table}\n')
 summary['ablation'] = abl
 
+# ---------- comparison at 1024 bits ----------
+PARAMS = {'PEE': '0', 'BASE': '128.7k', 'PROP': '62.9k', 'PROPR': '62.9k'}
+rob = summary.get('robust', {})
+ridx = {'PEE': 0, 'BASE': 1, 'PROP': 2, 'PROPR': 3}
+with open(os.path.join(TAB, 'tab_compare.tex'), 'w') as f:
+    f.write('\\begin{table*}[t]\n\\centering\n\\caption{Comparison at 1024 bits (0.0156 bpp) over all test images. '
+            'Success = embedding possible; Exact = cover and message recovered bit for bit; lossy-channel BER for '
+            'Gaussian noise ($\\sigma{=}2$) and JPEG (Q 90). Times are MATLAB/Octave on a 2-core CPU.}\n'
+            '\\label{tab:compare}\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lccccccccc}\n\\toprule\n'
+            'Method & Params & PSNR (dB) & SSIM & Aux (bits) & Success & Exact & BER GN2 (\\%) & BER JPEG90 (\\%) & Embed / extract (s)\\\\\n\\midrule\n')
+    for m in ['PEE', 'BASE', 'PROP', 'PROPR']:
+        q = B[(B.method == m) & (B.s == 4)]
+        if len(q) == 0:
+            continue
+        ok = q[q.ok == 1]
+        g2 = rob.get('gauss2', [np.nan] * 4)[ridx[m]]
+        j90 = rob.get('jpeg90', [np.nan] * 4)[ridx[m]]
+        f.write(f"{NAME[m]} & {PARAMS[m]} & {fmt(ok.psnr.mean())} & {fmt(ok.ssim.mean(), 4)} & "
+                f"{'--' if m == 'PEE' else fmt(ok.aux_bits.mean(), 0)} & {int(q.ok.sum())}/{len(q)} & "
+                f"{int(q.exact_cover.sum())}/{len(q)} & {fmt(g2)} & {fmt(j90)} & "
+                f"{fmt(ok.t_embed.mean())} / {fmt(ok.t_extract.mean())}\\\\\n")
+    f.write('\\bottomrule\n\\end{tabular}\n\\end{table*}\n')
+
 json.dump(summary, open(os.path.join(RES, 'summary.json'), 'w'), indent=1)
 
 # ---------- LaTeX macros with every number quoted in the text ----------
