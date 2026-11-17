@@ -100,15 +100,23 @@ one network serves $s\in\{2,4,8\}$.
 Two things separate the receiver from exact recovery: the bits where $\hat{\mathbf m}\neq\tilde{\mathbf m}$, and the
 clipped pixels. The sender computes the error flags $\mathbf e=\hat{\mathbf m}\oplus\tilde{\mathbf m}$ from $D(Y)$, which the
 receiver can reproduce, and for every pixel with $Y(p)\in\{0,255\}$ an overflow flag
-$o_p=\mathbb 1[Y_t(p)\neq Y(p)]$, plus the magnitude $|Y_t(p)-Y(p)|$ when $o_p=1$. Flags are coded with an adaptive binary
-arithmetic coder~\cite{witten1987ac}. The context of $e_i$ is the bin of $|\ell_i|$ among eight intervals
+$o_p=\mathbb 1[Y_t(p)\neq Y(p)]$ with its magnitude $|Y_t(p)-Y(p)|$. All flags are coded with an adaptive binary
+arithmetic coder~\cite{witten1987ac} (32-bit integer implementation, counts halved above 4096). The context of $e_i$ is the bin of $|\ell_i|$ among eight intervals
 $[0,0.5,1,1.5,2,3,4,6,\infty)$, so its code length approaches
 \begin{equation}
 L_{\mathbf e}\approx\sum_i -\log_2 \hat P\big(e_i \mid c(|\ell_i|)\big),
 \end{equation}
-which is small because errors gather at low confidence. The context of $o_p$ is the pair (value 0 or 255, number of
-4-neighbours at the same value). Magnitudes are Elias-gamma coded. The auxiliary stream $A$ is the 24-bit code length,
-the arithmetic code and the magnitudes.
+which is small because errors gather at low confidence.
+
+Overflow flags need a better context than the neighbourhood, because in dark CT backgrounds or saturated skies a large
+share of the candidates really did overflow. Once $\tilde{\mathbf m}$ is known, the receiver can run the inverse
+(\ref{eq:inv}) on the \emph{clipped} image $Y$ and obtain an estimate $\hat X$ of the cover. At a pixel with $Y(p)=0$,
+$\hat X(p)-Y(p)$ estimates how far the couplings pushed the pixel downwards (and $Y(p)-\hat X(p)$ for $Y(p)=255$), so a
+positive value strongly suggests $o_p=1$. We quantise this predicted offset into four bins and combine it with the pixel
+value, giving eight contexts. Almost all overflows are by a single grey level, so instead of Elias-gamma we code the flag
+$\mathbb 1[|Y_t(p)-Y(p)|>1]$ with the arithmetic coder and gamma-code only the rare larger values. The auxiliary stream
+$A$ is the concatenation of three length-prefixed arithmetic codes (message errors, overflow flags, magnitude flags) and
+the remaining gamma codes. Since $\hat X$ needs $\tilde{\mathbf m}$, the receiver decodes the message errors first.
 
 \subsection{Reversible embedding of the side information}
 $A$ is hidden in $Y$ with rhombus PEE~\cite{sachnev2009}. Each pixel of one checkerboard set is predicted from its four
@@ -132,7 +140,8 @@ risky pixels are moved one level inwards and their positions are stored Elias-ga
 \State $Y_t\gets\mathrm{D2S}(X_a,X_b)$; $Y\gets\mathrm{clip}(Y_t,0,255)$
 \State $\boldsymbol\ell\gets\mathrm{BlockMean}_s(D(Y))$; $\mathbf e\gets\mathbb 1[\boldsymbol\ell>0]\oplus\tilde{\mathbf m}$
 \State $\Omega\gets\{p:Y(p)\in\{0,255\}\}$; $o_p\gets\mathbb 1[Y_t(p)\neq Y(p)],\ p\in\Omega$
-\State $A\gets[\,|C|,\ C=\mathrm{AC}(\mathbf e,\mathbf o\mid\text{contexts}),\ \gamma(|Y_t-Y|_{o=1})\,]$
+\State $\hat X\gets$ inverse couplings of $Y$ with $M$ \Comment{offset contexts}
+\State $A\gets[\mathrm{AC}(\mathbf e\,|\,|\boldsymbol\ell|),\ \mathrm{AC}(\mathbf o\,|\,\hat X{-}Y),\ \text{magnitudes}]$
 \State $Y'\gets\mathrm{PEE}(Y,A)$ \Comment{multi-layer rhombus PEE}
 \State \Return stego $Y'$
 \end{algorithmic}
@@ -143,9 +152,9 @@ risky pixels are moved one level inwards and their positions are stored Elias-ga
 \begin{algorithmic}[1]
 \Require stego $Y'$, key $\kappa$, repetition $s$
 \State $(A,Y)\gets\mathrm{PEE}^{-1}(Y')$ \Comment{exact}
-\State $\boldsymbol\ell\gets\mathrm{BlockMean}_s(D(Y))$; rebuild the contexts
-\State decode $\mathbf e$, $\mathbf o$ and magnitudes from $A$; restore $Y_t$ from $Y$
+\State $\boldsymbol\ell\gets\mathrm{BlockMean}_s(D(Y))$; decode $\mathbf e$ from $A$
 \State $\tilde{\mathbf m}\gets\mathbb 1[\boldsymbol\ell>0]\oplus\mathbf e$; $M\gets R_s(2\tilde{\mathbf m}-1)$
+\State $\hat X\gets$ inverse couplings of $Y$; decode $\mathbf o$, magnitudes; restore $Y_t$
 \State $(X_a,X_b)\gets\mathrm{S2D}(Y_t)$
 \For{$k=K$ down to $1$} apply (\ref{eq:inv}) \EndFor
 \State \Return $X=\mathrm{D2S}(X_a,X_b)$, $\mathbf m=\tilde{\mathbf m}\oplus\mathrm{Logistic}(\kappa)$
