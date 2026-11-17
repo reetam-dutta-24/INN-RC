@@ -1,0 +1,73 @@
+\input{numbers.tex}
+\section{Experimental Results and Analysis}
+\subsection{Setup}
+\textbf{Data.} Training uses the 100 Urban100 images~\cite{huang2015urban} converted to grey (92 for training, 8 for
+validation) with random $64\times64$ crops and flips. Testing uses three sets that never appear in training: BSD100
+\cite{martin2001bsd} ($256\times256$ centre crops), the 24 Kodak images~\cite{kodak} (grey, $512\times512$ centre crop
+resized to $256\times256$, as is common practice for BOSSbase~\cite{bas2011boss}) and 8 real DICOM slices (3 CT, 2 MR,
+2 CR, 1 perfusion CT) from the public pydicom test collection~\cite{pydicomdata}, windowed to 8 bits and resized to
+$256\times256$. This gives \nImgs{} test images. BOSSbase 1.01 was not reachable from our network; the scripts accept
+any folder of images.
+
+\textbf{Training.} Both IC-INN models are trained for 12{,}000 iterations, batch 12, Adam~\cite{kingma2015adam} with a
+cosine schedule from $10^{-3}$, on a 2-core CPU (about 15 minutes each). Fig.~\ref{fig:train} shows the curriculum: the
+stego PSNR first drops while the decoder learns, then rises as the image loss is switched on.
+
+\textbf{Compared methods.} (i) Rhombus PEE~\cite{sachnev2009} embedding the message directly, using our implementation
+(the same one used for the side information). (ii) A float-INN baseline with residual compensation: a HiNet-style
+\cite{jing2021hinet} affine-coupling network in the Haar domain (128.7k parameters), trained with rounding in the loop and
+a cover-recovery loss; its residual $X-\lfloor 255\hat X\rceil$ and wrong bits are coded and hidden by PEE in the same way
+as ours. (iii) IC-INN-Q and (iv) IC-INN-R, our quality- and robustness-oriented models.
+
+\textbf{Metrics and payloads.} Payloads are 256, 1024 and 4096 bits ($s=8,4,2$), i.e.\ 0.0039, 0.0156 and 0.0625 bpp
+of message on a $256\times256$ cover. We report PSNR and SSIM~\cite{wang2004ssim} of the final stego against the cover,
+the side-information size, BER and NC of the extracted message, and whether the cover came back bit for bit. A run counts
+as exact only if both \texttt{isequal(cover, recovered)} and \texttt{isequal(message, extracted)} hold in MATLAB.
+
+\subsection{Reversibility and image quality}
+Table~\ref{tab:main} lists the lossless results. Every run that finished embedding was exactly reversible:
+\exactQ{} of \runsQ{} runs for IC-INN-Q and \exactR{} of \runsR{} for IC-INN-R, with BER $=0$ and NC $=1$ in all of them,
+on natural and medical images alike. The remaining runs (\failQ{} and \failR{}) failed \emph{before} embedding because
+the side information did not fit into the PEE capacity of the image; this happens only for busy textures or noisy dark
+scans at the largest payload, and the sender detects it. Classical PEE fails on \failPEE{} runs for the same reason.
+
+At 1024 bits IC-INN-Q reaches \psnrQfour{}~dB and SSIM \ssimQfour{}; at 4096 bits \psnrQtwo{}~dB and \ssimQtwo{}.
+Before the side information is added the stego has \pinnQfour{} and \pinnQtwo{}~dB, so the compensation stage costs
+less than 1~dB. The side information is smaller than the message it protects: on average \auxQfour{} bits for a
+1024-bit message and \auxQtwo{} bits for a 4096-bit one. Fig.~\ref{fig:psnr} shows PSNR and side-information size against
+payload, and Fig.~\ref{fig:visual} shows examples; the difference images are noise-like, with no visible structure.
+
+Classical PEE gives much higher PSNR at these small payloads (\psnrPEEfour{}~dB at 1024 bits). This is expected and we do
+not hide it: when the channel is guaranteed lossless, prediction-error expansion changes only a few hundred pixels by
+one level, while a learned embedding spreads a decodable signal over the whole image. The point of the learned embedding
+is what happens when the channel is \emph{not} lossless (Section~\ref{sec:robust}).
+
+\input{tab_main.tex}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/psnr_bpp.pdf}
+\caption{(a) Mean stego PSNR over all test images versus payload. (b) Mean side-information size; the dashed line is
+the message length.}
+\label{fig:psnr}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{figs/visual.pdf}
+\caption{IC-INN-Q at 1024 bits (Kodak 23, BSD100 \#10, chest CR, shoulder MR). The recovered images are identical to
+the covers.}
+\label{fig:visual}
+\end{figure}
+
+\subsection{Side-information coding (ablation)}
+Table~\ref{tab:ablation} isolates the coder. Without entropy coding (A0) the side information averages \ablA{} bits at
+1024-bit payload; a context-free arithmetic coder (A1) roughly halves it, and decoder-confidence contexts for the
+message errors with neighbourhood contexts for the overflow flags (A2, our first version) give \ablC{} bits. The
+predicted-offset contexts and coded magnitudes (A3) bring this down to \ablD{} bits, \ablRatioNb{}$\times$ smaller than
+A2 and \ablRatio{}$\times$ smaller than A0. The gain comes almost entirely from the DICOM images, whose black
+backgrounds produce thousands of overflowed pixels: there A2 needs \ablDicomC{} bits and A3 only \ablDicomD{}.
+
+\input{tab_ablation.tex}
+
+\input{sec_results_b.tex}
