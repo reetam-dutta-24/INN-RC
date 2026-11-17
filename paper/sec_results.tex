@@ -27,8 +27,9 @@ as exact only if both \texttt{isequal(cover, recovered)} and \texttt{isequal(mes
 Table~\ref{tab:main} lists the lossless results. Every run that finished embedding was exactly reversible:
 \exactQ{} of \runsQ{} runs for IC-INN-Q and \exactR{} of \runsR{} for IC-INN-R, with BER $=0$ and NC $=1$ in all of them,
 on natural and medical images alike. The remaining runs (\failQ{} and \failR{}) failed \emph{before} embedding because
-the side information did not fit into the PEE capacity of the image; this happens only for busy textures or noisy dark
-scans at the largest payload, and the sender detects it. Classical PEE fails on \failPEE{} runs for the same reason.
+the side information did not fit into the PEE capacity of the image. Most of them are at 4096 bits; at the smaller
+payloads only one very busy texture (BSD100 \#30) fails for IC-INN-Q, and three more images (one texture, two noisy CT
+scans) for IC-INN-R. The sender detects this before anything is sent. Classical PEE fails on \failPEE{} runs for the same reason.
 
 At 1024 bits IC-INN-Q reaches \psnrQfour{}~dB and SSIM \ssimQfour{}; at 4096 bits \psnrQtwo{}~dB and \ssimQtwo{}.
 Before the side information is added the stego has \pinnQfour{} and \pinnQtwo{}~dB, so the compensation stage costs
