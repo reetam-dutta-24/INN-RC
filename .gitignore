@@ -8,3 +8,5 @@ results/tmp/
 *.bbl
 *.out
 submission/
+octave-workspace
+docs/code_list.tex
