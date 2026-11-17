@@ -1,0 +1,62 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\usepackage{fancyhdr}
+
+% ---- course header on every page ----
+\newcommand{\groupno}{XX}
+\fancypagestyle{uct}{%
+  \fancyhf{}%
+  \fancyhead[L]{\scriptsize Group No.: \groupno \quad Project Name: INN-RC (Lossless Image Steganography)}%
+  \fancyhead[R]{\scriptsize Reetam Dutta (102318024), Priyadarshi Vivekanand (102318048)}%
+  \fancyfoot[C]{\scriptsize\thepage}%
+  \renewcommand{\headrulewidth}{0.3pt}}
+\setlength{\headheight}{12pt}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\begin{document}
+
+\title{Lossless Image Steganography with a Message-Conditioned Integer Coupling Network and Context-Coded Residual Compensation}
+
+\author{\IEEEauthorblockN{Reetam Dutta}
+\IEEEauthorblockA{\textit{Dept. of Computer Science and Engineering}\\
+\textit{Thapar Institute of Engineering and Technology}\\
+Patiala, India}
+\and
+\IEEEauthorblockN{Priyadarshi Vivekanand}
+\IEEEauthorblockA{\textit{Dept. of Computer Science and Engineering}\\
+\textit{Thapar Institute of Engineering and Technology}\\
+Patiala, India}}
+
+\maketitle
+\thispagestyle{uct}
+\pagestyle{uct}
+
+\input{abstract.tex}
+
+\begin{IEEEkeywords}
+reversible data hiding, steganography, invertible neural network, integer coupling, arithmetic coding, prediction-error expansion
+\end{IEEEkeywords}
+
+\input{sec_intro.tex}
+\input{sec_related.tex}
+\input{sec_method.tex}
+\input{sec_results.tex}
+\input{sec_conclusion.tex}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

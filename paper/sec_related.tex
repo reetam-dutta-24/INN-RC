@@ -1,0 +1,26 @@
+\section{Related Work}
+\subsection{Reversible data hiding}
+Tian's difference expansion~\cite{tian2003de} and Ni \emph{et al.}'s histogram shifting~\cite{ni2006hs} started spatial
+RDH. Thodi and Rodr\'iguez~\cite{thodi2007pee} moved the expansion to prediction errors, and Sachnev
+\emph{et al.}~\cite{sachnev2009} improved it with a rhombus predictor, two-pass checkerboard embedding and sorting by local
+variance; this is the PEE variant we use in our second stage and as the classical reference. Pairwise PEE~\cite{ou2013ppee}
+reduces distortion further by expanding error pairs. Hu and Xiang replaced the hand-made predictor with a CNN
+\cite{hu2021cnnp} and added prediction-error-ordering based adaptive embedding \cite{hu2022cnnpami}; Qiu
+\emph{et al.}~\cite{qiu2025icnnp} also predict pixel complexity with the network. In all of these, learning only sharpens the
+prediction; the hidden bits are not robust.
+
+\subsection{Deep and invertible steganography}
+Baluja~\cite{baluja2017} hid a full image inside another with an encoder--decoder CNN, and HiDDeN~\cite{zhu2018hidden}
+introduced a noise layer for robust bit hiding. Invertible networks built from affine coupling layers~\cite{dinh2017realnvp}
+were then used by HiNet~\cite{jing2021hinet} (in the wavelet domain) and ISN~\cite{lu2021isn} so that hiding and revealing
+share all parameters. RIIS~\cite{xu2022riis}, PRIS~\cite{yang2023pris} and Lan \emph{et al.}~\cite{lan2023robust} make the
+invertible pipeline robust to distortions and rounding; PRIS in particular points out that rounding errors are usually
+ignored in INN steganography. None of these methods returns the cover image.
+
+\subsection{Deep robust reversible watermarking}
+DRRW~\cite{chen2025drrw} and CRMark~\cite{chen2025crmark} are the closest to our work. They use an integer invertible
+watermark network, in the spirit of integer discrete flows~\cite{hoogeboom2019idf}, map the cover and watermark to an
+overflowed stego and a latent, compress both with arithmetic coding and embed the result by RDH. Our scheme differs in
+where the message enters: it conditions the integer couplings instead of being one of the network inputs, which removes
+the latent from the auxiliary data and lets us use the decoder confidence as coding context. We also target a much
+smaller model and a full MATLAB pipeline.

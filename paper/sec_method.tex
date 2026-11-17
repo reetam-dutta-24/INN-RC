@@ -1,0 +1,153 @@
+\section{Proposed Method}
+\subsection{Overview}
+Fig.~\ref{fig:arch} shows the system. The sender scrambles the message, embeds it with the integer coupling network,
+clips the result to 8 bits, measures what the receiver will get wrong, codes these corrections and hides them with PEE.
+The receiver runs the same steps backwards. Throughout, $X\in\{0,\dots,255\}^{H\times W}$ is the grayscale cover and
+$\mathbf{m}\in\{0,1\}^N$ the message.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[font=\footnotesize, node distance=0.42cm and 0.45cm,
+  blk/.style={draw, rounded corners=2pt, align=center, minimum height=0.8cm, fill=#1},
+  blk/.default=white, ar/.style={-{Stealth[length=2mm]}, semithick}]
+% sender
+\node[blk=gray!10] (cov) {Cover $X$};
+\node[blk=gray!10, below=of cov] (msg) {Message $\mathbf{m}$};
+\node[blk=yellow!15, right=of msg] (scr) {Logistic-map\\scrambling};
+\node[blk=yellow!15, right=of scr] (map) {Bit repetition\\$M=R_s(2\tilde{\mathbf m}-1)$};
+\node[blk=blue!12, right=1.1cm of cov, xshift=2.6cm] (cpl) {IC-INN: integer\\couplings $\phi_1..\phi_K$};
+\node[blk=blue!12, right=of cpl] (clip) {Clip\\$Y=\mathrm{clip}(Y_t)$};
+\node[blk=blue!12, right=of clip] (dec) {Decoder $D$\\logits $\ell$};
+\node[blk=green!12, below=of dec] (side) {Side info: wrong bits $\mathbf e$,\\overflow of $Y_t$};
+\node[blk=green!12, right=of side] (ac) {Context-adaptive\\arithmetic coder};
+\node[blk=orange!15, right=of dec] (pee) {Rhombus PEE\\(multi-layer)};
+\node[blk=gray!10, right=of pee] (st) {Stego $Y'$};
+\draw[ar] (cov) -- (cpl);
+\draw[ar] (msg) -- (scr); \draw[ar] (scr) -- (map); \draw[ar] (map) -| (cpl);
+\draw[ar] (cpl) -- node[above]{$Y_t$} (clip); \draw[ar] (clip) -- (dec);
+\draw[ar] (dec) -- (side); \draw[ar] (side) -- (ac); \draw[ar] (ac) -- node[right]{aux bits $A$} (pee);
+\draw[ar] (clip.north) |- ++(0,0.45) -| (pee.north);
+\draw[ar] (pee) -- (st);
+\node[draw, dashed, inner sep=4pt, fit=(cov)(msg)(scr)(map)(cpl)(clip)(dec)(side)(ac)(pee)(st), label={[anchor=south west]north west:\textbf{Sender}}] {};
+% receiver
+\node[blk=gray!10, below=1.65cm of msg] (st2) {Stego $Y'$};
+\node[blk=orange!15, right=of st2] (pee2) {PEE extraction};
+\node[blk=blue!12, right=of pee2] (dec2) {Decoder $D(Y)$};
+\node[blk=green!12, right=of dec2] (ac2) {Arithmetic\\decoding};
+\node[blk=yellow!15, right=of ac2] (fix) {$\tilde{\mathbf m}=\hat{\mathbf m}\oplus\mathbf e$,\\restore $Y_t$};
+\node[blk=blue!12, right=of fix] (inv) {Inverse couplings\\(exact)};
+\node[blk=gray!10, right=of inv] (out) {$X$ and $\mathbf m$\\bit-exact};
+\draw[ar] (st2) -- (pee2); \draw[ar] (pee2) -- node[above]{$Y$} (dec2); \draw[ar] (dec2) -- (ac2);
+\draw[ar] (pee2.south) |- ++(0,-0.35) -| node[pos=0.25, below]{$A$} (ac2.south);
+\draw[ar] (ac2) -- (fix); \draw[ar] (fix) -- (inv); \draw[ar] (inv) -- (out);
+\node[draw, dashed, inner sep=4pt, fit=(st2)(pee2)(dec2)(ac2)(fix)(inv)(out), yshift=-2pt, label={[anchor=south west]north west:\textbf{Receiver (lossless channel)}}] {};
+\end{tikzpicture}
+\caption{System architecture of INN-RC. On a lossy channel the receiver only applies $D$ to the received image and reads
+the message; the cover cannot be restored in that case.}
+\label{fig:arch}
+\end{figure*}
+
+\subsection{Message-conditioned integer coupling}
+The message is first XOR-ed with a keystream $\mathbf{k}$ from the logistic map $z_{t+1}=3.99\,z_t(1-z_t)$ seeded by a
+secret key, $\tilde{\mathbf m}=\mathbf m\oplus\mathbf k$. Each bit is spread over an $s\times s$ block of the half-resolution
+grid, giving the map $M=R_s(2\tilde{\mathbf m}-1)\in\{-1,1\}^{\frac H2\times\frac W2}$ and a payload of
+$N=HW/(4s^2)$ bits, i.e. $1/(4s^2)$ bpp.
+
+The cover is split by a $2\times 2$ space-to-depth into two halves, $X_a=[X(2i,2j),X(2i{+}1,2j{+}1)]$ and
+$X_b=[X(2i,2j{+}1),X(2i{+}1,2j)]$. $K=4$ coupling steps then update one half from the other half and the message:
+\begin{equation}
+\begin{aligned}
+X_b^{(k)} &= X_b^{(k-1)} + \big\lfloor \phi_k\big(X_a^{(k-1)}/255,\,M\big) \big\rceil, && k \text{ odd},\\
+X_a^{(k)} &= X_a^{(k-1)} + \big\lfloor \phi_k\big(X_b^{(k-1)}/255,\,M\big) \big\rceil, && k \text{ even},
+\end{aligned}
+\label{eq:couple}
+\end{equation}
+where $\lfloor\cdot\rceil$ is rounding and $\phi_k(\cdot)=16\tanh(\tfrac12 f_k(\cdot))$, with $f_k$ three $3{\times}3$
+convolutions (32 channels, leaky ReLU). The bound of $\pm16$ grey levels keeps training stable. Reassembling the halves
+gives the integer stego $Y_t$, which may leave $[0,255]$ by a few levels, and the transmitted image is
+$Y=\mathrm{clip}(Y_t,0,255)$.
+
+Every step in (\ref{eq:couple}) is an integer addition whose increment depends only on the \emph{other} half and on $M$.
+Hence, for a known $M$, the receiver inverts it exactly:
+\begin{equation}
+X_a^{(k-1)} = X_a^{(k)} - \big\lfloor \phi_k(X_b^{(k)}/255, M) \big\rceil \quad (k \text{ even}),
+\label{eq:inv}
+\end{equation}
+and symmetrically for odd $k$, going from $k=K$ down to 1. No latent variable is produced, because the message is a
+condition and not an input that has to come out on the other side.
+
+\subsection{Message decoder and training}
+A four-layer CNN $D$ takes the space-to-depth stego and outputs one logit per position of the half grid. Averaging over
+each $s\times s$ block gives $\boldsymbol\ell\in\R^N$ and $\hat{\mathbf m}=\mathbb 1[\boldsymbol\ell>0]$. Coupling
+networks and decoder (62{,}857 parameters in total) are trained jointly with
+\begin{equation}
+\begin{aligned}
+\mathcal L ={}& \lambda_{\mathrm{img}}\,\overline{(Y-X)^2}
+ + \lambda_{\mathrm{msg}}\,\mathrm{BCE}\big(\boldsymbol\ell(\mathcal N(Y)),\tilde{\mathbf m}\big)\\
+ &+ \lambda_{\mathrm{of}}\,\overline{[-Y_t]_+ + [Y_t-255]_+},
+\end{aligned}
+\label{eq:loss}
+\end{equation}
+where $\mathcal N$ is a noise layer (identity with probability 0.45, otherwise Gaussian noise with
+$\sigma\le 2$, salt-and-pepper up to 2\% or a $3\times3$ binomial blur) and the last term penalises overflow. Rounding
+in (\ref{eq:couple}) is replaced by additive uniform noise~\cite{balle2017} in the first half of training and by the
+straight-through estimator afterwards. The decoder first learns with $\lambda_{\mathrm{img}}\approx0$; the image and
+overflow weights are then raised gradually. We train a quality-oriented model ($\lambda_{\mathrm{msg}}=10$) and a
+robustness-oriented one ($\lambda_{\mathrm{msg}}=30$), each with $\lambda_{\mathrm{img}}=1$, $\lambda_{\mathrm{of}}=5$, and
+one network serves $s\in\{2,4,8\}$.
+
+\subsection{Residual compensation}
+Two things separate the receiver from exact recovery: the bits where $\hat{\mathbf m}\neq\tilde{\mathbf m}$, and the
+clipped pixels. The sender computes the error flags $\mathbf e=\hat{\mathbf m}\oplus\tilde{\mathbf m}$ from $D(Y)$, which the
+receiver can reproduce, and for every pixel with $Y(p)\in\{0,255\}$ an overflow flag
+$o_p=\mathbb 1[Y_t(p)\neq Y(p)]$, plus the magnitude $|Y_t(p)-Y(p)|$ when $o_p=1$. Flags are coded with an adaptive binary
+arithmetic coder~\cite{witten1987ac}. The context of $e_i$ is the bin of $|\ell_i|$ among eight intervals
+$[0,0.5,1,1.5,2,3,4,6,\infty)$, so its code length approaches
+\begin{equation}
+L_{\mathbf e}\approx\sum_i -\log_2 \hat P\big(e_i \mid c(|\ell_i|)\big),
+\end{equation}
+which is small because errors gather at low confidence. The context of $o_p$ is the pair (value 0 or 255, number of
+4-neighbours at the same value). Magnitudes are Elias-gamma coded. The auxiliary stream $A$ is the 24-bit code length,
+the arithmetic code and the magnitudes.
+
+\subsection{Reversible embedding of the side information}
+$A$ is hidden in $Y$ with rhombus PEE~\cite{sachnev2009}. Each pixel of one checkerboard set is predicted from its four
+neighbours, $\hat y=\lfloor(y_u+y_d+y_l+y_r)/4\rceil$, and the error $\varepsilon=y-\hat y$ is changed to
+\begin{equation}
+\varepsilon'=\begin{cases}\varepsilon+1,&\varepsilon\ge1\\ \varepsilon+b,&\varepsilon=0\\ \varepsilon-b,&\varepsilon=-1\\
+\varepsilon-1,&\varepsilon\le-2\end{cases}
+\end{equation}
+for a bit $b$. Pixels are visited in increasing order of local complexity and the second set is processed after the
+first. If $A$ does not fit, further layers are added. Pixels whose prediction lies in $[1,4]$ or $[251,255]$ are skipped
+(both sides can compute this), which prevents noisy black or saturated regions from overflowing; the few remaining
+risky pixels are moved one level inwards and their positions are stored Elias-gamma coded in the pass header.
+
+\begin{algorithm}[t]
+\caption{Embedding}\label{alg:emb}
+\begin{algorithmic}[1]
+\Require cover $X$, message $\mathbf m$, key $\kappa$, repetition $s$
+\State $\tilde{\mathbf m}\gets\mathbf m\oplus\mathrm{Logistic}(\kappa)$; $M\gets R_s(2\tilde{\mathbf m}-1)$
+\State $(X_a,X_b)\gets\mathrm{S2D}(X)$
+\For{$k=1$ to $K$} apply (\ref{eq:couple}) \EndFor
+\State $Y_t\gets\mathrm{D2S}(X_a,X_b)$; $Y\gets\mathrm{clip}(Y_t,0,255)$
+\State $\boldsymbol\ell\gets\mathrm{BlockMean}_s(D(Y))$; $\mathbf e\gets\mathbb 1[\boldsymbol\ell>0]\oplus\tilde{\mathbf m}$
+\State $\Omega\gets\{p:Y(p)\in\{0,255\}\}$; $o_p\gets\mathbb 1[Y_t(p)\neq Y(p)],\ p\in\Omega$
+\State $A\gets[\,|C|,\ C=\mathrm{AC}(\mathbf e,\mathbf o\mid\text{contexts}),\ \gamma(|Y_t-Y|_{o=1})\,]$
+\State $Y'\gets\mathrm{PEE}(Y,A)$ \Comment{multi-layer rhombus PEE}
+\State \Return stego $Y'$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+\caption{Extraction and recovery}\label{alg:ext}
+\begin{algorithmic}[1]
+\Require stego $Y'$, key $\kappa$, repetition $s$
+\State $(A,Y)\gets\mathrm{PEE}^{-1}(Y')$ \Comment{exact}
+\State $\boldsymbol\ell\gets\mathrm{BlockMean}_s(D(Y))$; rebuild the contexts
+\State decode $\mathbf e$, $\mathbf o$ and magnitudes from $A$; restore $Y_t$ from $Y$
+\State $\tilde{\mathbf m}\gets\mathbb 1[\boldsymbol\ell>0]\oplus\mathbf e$; $M\gets R_s(2\tilde{\mathbf m}-1)$
+\State $(X_a,X_b)\gets\mathrm{S2D}(Y_t)$
+\For{$k=K$ down to $1$} apply (\ref{eq:inv}) \EndFor
+\State \Return $X=\mathrm{D2S}(X_a,X_b)$, $\mathbf m=\tilde{\mathbf m}\oplus\mathrm{Logistic}(\kappa)$
+\end{algorithmic}
+\end{algorithm}

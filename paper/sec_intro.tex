@@ -1,0 +1,38 @@
+\section{Introduction}
+Steganography hides a message inside an innocent-looking cover so that only the intended receiver knows it is there.
+In most deep steganography systems the cover is treated as disposable: the network adds a small perturbation, the
+receiver reads the message, and the original image is gone for good. For medical scans, legal evidence, satellite and
+military imagery this is not acceptable, because the exact original pixels may be needed later. Reversible data hiding
+(RDH) solves the reversibility part. Classical RDH schemes based on difference expansion~\cite{tian2003de}, histogram
+shifting~\cite{ni2006hs} and prediction-error expansion (PEE)~\cite{thodi2007pee,sachnev2009,ou2013ppee} return the cover
+bit for bit, but the hidden bits are destroyed by the smallest change to the marked image, such as a single JPEG save.
+
+Deep, and in particular invertible, networks have the opposite profile. Invertible steganography networks such as
+HiNet~\cite{jing2021hinet} and ISN~\cite{lu2021isn} hide and reveal with the same weights, and noise-layer training as in
+HiDDeN~\cite{zhu2018hidden} or RIIS~\cite{xu2022riis} makes the message survive distortion. However, these networks work in
+floating point. When the stego image is rounded to 8 bits and the part of the output that is not transmitted (the
+latent) is replaced by zeros, the inverse pass no longer gives back the cover. Recent robust-reversible work, DRRW and
+CRMark~\cite{chen2025drrw,chen2025crmark}, closes this gap with an \emph{integer} invertible network: overflowed pixels and
+the dropped latent are compressed into an auxiliary bitstream and hidden again with classical RDH.
+
+We follow the same two-stage idea but change what has to be stored. Our observation is simple: if the coupling layers
+are integer additions that are \emph{conditioned on the message}, then the receiver can undo them exactly as soon as it
+knows the message, and there is no latent at all. The message itself is read back by a separate small decoder, and the
+only things the receiver can get wrong are (i) a few message bits and (ii) pixels that were clipped at 0 or 255. These
+two kinds of residual are what we compensate. Since the decoder outputs a confidence for every bit, the wrong bits are
+concentrated where the confidence is low, and an arithmetic coder that uses this confidence as context codes them very
+cheaply.
+
+\textbf{Contributions.} The main contributions of this work are:
+\begin{itemize}
+\item a message-conditioned integer coupling network (IC-INN) whose inverse is exact by construction, so that
+exact recovery needs no latent variable, only decoder-error flags and overflow corrections;
+\item a residual compensation stage that codes these corrections with a context-adaptive binary arithmetic coder whose
+contexts come from the decoder confidence and the local stego values, followed by a multi-layer rhombus PEE embedding
+with an overflow-safe predictor range;
+\item a lightweight design (62.9k parameters) that trains on a CPU, with a full MATLAB implementation of inference,
+coding, embedding, extraction and an App Designer GUI;
+\item an evaluation on 132 test images (BSD100, Kodak and real DICOM CT/MR/CR scans) against classical rhombus PEE and a
+float-INN baseline with residual compensation, covering exact recovery, image quality, side-information size and
+robustness to noise and JPEG.
+\end{itemize}
