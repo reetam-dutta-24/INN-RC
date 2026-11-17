@@ -2,7 +2,8 @@ function run_benchmark(maxPerSet)
 % RUN_BENCHMARK  Lossless benchmark on all test images.
 %   Methods : PEE   - rhombus PEE embedding the message directly (classical)
 %             BASE  - float INN + residual compensation (baseline, s = 4 model)
-%             PROP  - IC-INN + residual compensation (proposed)
+%             PROP  - IC-INN + residual compensation (proposed, quality model)
+%             PROPR - same scheme, robustness-oriented model (icinn_r.mat)
 %   Payload : s = 8, 4, 2  ->  256, 1024, 4096 bits on a 256x256 image
 %   Output  : ../results/benchmark.csv (one row per image / method / payload)
 if nargin < 1, maxPerSet = inf; end
@@ -11,6 +12,7 @@ root = fileparts(fileparts(mfilename('fullpath')));
 sets = {'test_bsd100', 'test_kodak', 'test_medical'};
 key = 20261127;
 prop = icinn_load(fullfile(root, 'models', 'icinn.mat'));
+propR = icinn_load(fullfile(root, 'models', 'icinn_r.mat'));
 baseFile = fullfile(root, 'models', 'finn_s4.mat');
 haveBase = exist(baseFile, 'file') == 2;
 if haveBase, base = finn_load(baseFile); end
@@ -24,7 +26,7 @@ for d = 1:numel(sets)
         for s = [8 4 2]
             nb = (size(I,1)/2/s) * (size(I,2)/2/s);
             rand('seed', 1000*d + i + s); msg = rand(nb, 1) > 0.5;   %#ok<RAND>
-            methods = {'PEE', 'PROP'};
+            methods = {'PEE', 'PROP', 'PROPR'};
             if haveBase && s == base.s, methods{end+1} = 'BASE'; end %#ok<AGROW>
             for m = 1:numel(methods)
                 r = struct('psnr', NaN, 'ssim', NaN, 'aux', NaN, 'layers', NaN, 'exact', 0, ...
@@ -38,6 +40,11 @@ for d = 1:numel(sets)
                         case 'PROP'
                             tic; [S, inf] = inncr_embed(I, msg, prop, s, key); r.te = toc;
                             tic; [m2, I2] = inncr_extract(S, prop, s, key); r.tx = toc;
+                            r.aux = inf.aux_bits; r.layers = inf.pee_layers;
+                            r.pinn = inf.psnr_inn; r.binn = inf.ber_clean;
+                        case 'PROPR'
+                            tic; [S, inf] = inncr_embed(I, msg, propR, s, key); r.te = toc;
+                            tic; [m2, I2] = inncr_extract(S, propR, s, key); r.tx = toc;
                             r.aux = inf.aux_bits; r.layers = inf.pee_layers;
                             r.pinn = inf.psnr_inn; r.binn = inf.ber_clean;
                         case 'BASE'

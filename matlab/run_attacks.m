@@ -9,6 +9,7 @@ if exist('OCTAVE_VERSION', 'builtin'), pkg load image; end
 root = fileparts(fileparts(mfilename('fullpath')));
 key = 20261127; s = 4;
 prop = icinn_load(fullfile(root, 'models', 'icinn.mat'));
+propR = icinn_load(fullfile(root, 'models', 'icinn_r.mat'));
 base = finn_load(fullfile(root, 'models', 'finn_s4.mat'));
 attacks = {'none', 0; 'gauss', 1; 'gauss', 2; 'gauss', 3; 'sp', 0.005; 'sp', 0.01; 'jpeg', 95; 'jpeg', 90; 'jpeg', 80};
 list = {};
@@ -23,6 +24,7 @@ for i = 1:numel(list)
     rand('seed', 77 + i); msg = rand(nb, 1) > 0.5;   %#ok<RAND>
     ks = logistic_keystream(nb, key);
     S.PROP = inncr_embed(I, msg, prop, s, key);
+    S.PROPR = inncr_embed(I, msg, propR, s, key);
     S.BASE = baseline_embed(I, msg, base, key);
     S.PEE  = pee_embed(I, msg);
     meth = fieldnames(S);
@@ -33,6 +35,8 @@ for i = 1:numel(list)
             switch meth{m}
                 case 'PROP'
                     L = icinn_decode(prop, A, s); bits = xor(L(:) > 0, ks);
+                case 'PROPR'
+                    L = icinn_decode(propR, A, s); bits = xor(L(:) > 0, ks);
                 case 'BASE'
                     [~, mr] = finn_reveal(base, double(A) / 255);
                     L = block_mean(mr, s); bits = xor(L(:) > 0, ks);
