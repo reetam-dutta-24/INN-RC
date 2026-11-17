@@ -33,8 +33,11 @@ scans at the largest payload, and the sender detects it. Classical PEE fails on 
 
 At 1024 bits IC-INN-Q reaches \psnrQfour{}~dB and SSIM \ssimQfour{}; at 4096 bits \psnrQtwo{}~dB and \ssimQtwo{}.
 Before the side information is added the stego has \pinnQfour{} and \pinnQtwo{}~dB, so the compensation stage costs
-less than 1~dB. The side information is smaller than the message it protects: on average \auxQfour{} bits for a
-1024-bit message and \auxQtwo{} bits for a 4096-bit one. Fig.~\ref{fig:psnr} shows PSNR and side-information size against
+less than 1~dB. From 1024 bits upwards the side information is smaller than the message it protects: on average \auxQfour{} bits
+for a 1024-bit message and \auxQtwo{} bits for a 4096-bit one. At 256 bits it is slightly larger (\auxQeight{} bits),
+because the overflow part does not shrink with the payload. The robustness-oriented model makes fewer decoding errors
+(\berinnRtwo{}\% instead of \berinnQtwo{}\% at 4096 bits before compensation), so its side information grows more slowly,
+at the price of about 1--3~dB of PSNR. Fig.~\ref{fig:psnr} shows PSNR and side-information size against
 payload, and Fig.~\ref{fig:visual} shows examples; the difference images are noise-like, with no visible structure.
 
 Classical PEE gives much higher PSNR at these small payloads (\psnrPEEfour{}~dB at 1024 bits). This is expected and we do

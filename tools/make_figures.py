@@ -21,7 +21,7 @@ plt.rcParams.update({'font.family': 'serif', 'font.size': 8, 'axes.titlesize': 8
                      'axes.labelsize': 8, 'legend.fontsize': 7, 'xtick.labelsize': 7,
                      'ytick.labelsize': 7, 'axes.spines.top': False, 'axes.spines.right': False})
 COL = {'PEE': '#7f7f7f', 'BASE': '#d62728', 'PROP': '#1f77b4', 'PROPR': '#2ca02c'}
-NAME = {'PEE': 'Rhombus PEE [4]', 'BASE': 'Float INN + RC (baseline)',
+NAME = {'PEE': 'Rhombus PEE', 'BASE': 'Float INN + RC (baseline)',
         'PROP': 'IC-INN-Q (ours)', 'PROPR': 'IC-INN-R (ours)'}
 SETNAME = {'test_bsd100': 'BSD100', 'test_kodak': 'Kodak', 'test_medical': 'DICOM'}
 
@@ -86,25 +86,27 @@ for m in ['PEE', 'PROP', 'PROPR', 'BASE']:
                                        aux_by_set={k: float(v) for k, v in qs.groupby('set').aux_bits.mean().items()})
 
 # ---------- PSNR vs payload ----------
-fig, ax = plt.subplots(1, 2, figsize=(3.45, 1.55))
+fig, ax = plt.subplots(1, 2, figsize=(3.45, 1.75))
 for m in ['PEE', 'PROP', 'PROPR']:
     q = B[(B.method == m) & (B.ok == 1)].groupby('bpp')
     ax[0].plot(q.psnr.mean().index, q.psnr.mean().values, 'o-', ms=3, color=COL[m], label=NAME[m])
     if m != 'PEE':
         ax[1].plot(q.aux_bits.mean().index, q.aux_bits.mean().values / 1000, 'o-', ms=3, color=COL[m])
-        bits = B[(B.method == m)].groupby('bpp').bits.first()
-        if m == 'PROP':
-            ax[1].plot(bits.index, bits.values / 1000, 'k--', lw=0.8, label='message bits')
 qb = B[(B.method == 'BASE') & (B.ok == 1)]
 if len(qb):
     ax[0].plot(qb.bpp.mean(), qb.psnr.mean(), 's', ms=4, color=COL['BASE'], label=NAME['BASE'])
+    ax[1].plot(qb.bpp.mean(), qb.aux_bits.mean() / 1000, 's', ms=4, color=COL['BASE'])
+bits = B[B.method == 'PROP'].groupby('bpp').bits.first()
+ax[1].plot(bits.index, bits.values / 1000, 'k--', lw=0.8, label='message length')
 for a in ax:
     a.set_xscale('log', base=2); a.set_xlabel('payload (bpp)')
     a.set_xticks([1/256, 1/64, 1/16]); a.set_xticklabels(['1/256', '1/64', '1/16'])
-ax[0].set_ylabel('PSNR (dB)'); ax[1].set_ylabel('bits (x1000)')
-ax[0].set_title('(a) stego quality'); ax[1].set_title('(b) side info vs payload')
-ax[1].legend(frameon=False, loc='upper left')
-fig.legend(*ax[0].get_legend_handles_labels(), loc='lower center', ncol=2, frameon=False, bbox_to_anchor=(0.5, -0.17))
+    a.minorticks_off()
+ax[0].set_ylabel('PSNR (dB)'); ax[1].set_ylabel('kbits')
+ax[0].set_title('(a) stego quality'); ax[1].set_title('(b) side information')
+ax[1].legend(frameon=False, loc='upper left', fontsize=6)
+h, l = ax[0].get_legend_handles_labels()
+fig.legend(h, l, loc='lower center', ncol=2, frameon=False, bbox_to_anchor=(0.5, -0.2), fontsize=6.5)
 fig.tight_layout(pad=0.3)
 fig.savefig(os.path.join(FIG, 'psnr_bpp.pdf'), bbox_inches='tight')
 plt.close(fig)
