@@ -1,0 +1,111 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2cm,headheight=26pt,headsep=10pt]{geometry}
+\usepackage{times}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.2em}
+\input{header.tex}
+\pagestyle{uct}
+\setlength{\parskip}{3pt}
+\begin{document}
+\thispagestyle{uct}
+\begin{center}
+{\large\bfseries Phase 1: Literature Review and Problem Statement}\\[2pt]
+Track TRK-07: Lossless End-to-End Steganography (Deep Learning, Computer Vision)
+\end{center}
+
+\section*{1. Why this track}
+We picked TRK-07 because it is the only track whose toolbox column lists Computer Vision together with Deep Learning,
+which is the stack we wanted to work with. The task is to hide a message in an image with a neural network and still
+give back both the message and the cover image without a single wrong bit. That last condition is what makes the
+problem hard: neural networks work with real numbers, images are stored as 8-bit integers, and the rounding in
+between destroys exactly the information that reversibility needs.
+
+\section*{2. Baseline paper}
+The project PDF names ``Deep Reversible Image Watermarking Network via Invertible Residual Compensation'' for TRK-07,
+but the link given for it opens a different article (Saeidi and Mirzakuchaki, \emph{Reversible data hiding in
+encrypted images using LWE-based secret sharing}, Scientific Reports, 2025), which uses no neural network. We could not
+find a paper with the listed title. The closest published work that matches the description (invertible network,
+auxiliary data, exact recovery) is \textbf{Deep Robust Reversible Watermarking (DRRW)} by Chen \emph{et al.}
+(arXiv:2503.02490, 2025) and its ICCV 2025 version \emph{CRMark}. We use DRRW as our baseline reference and noted the
+link problem for the instructor.
+
+\textbf{What DRRW does.} An integer invertible watermark network (iIWN) maps the pair (cover, watermark) to a stego
+image and a latent variable. Because the network must stay invertible, the stego can leave the 0--255 range (overflow)
+and the latent cannot be thrown away. Both are compressed with arithmetic coding into an auxiliary bitstream, which is
+then hidden in the clipped stego with classical reversible data hiding (RDH). On a lossless channel the receiver
+undoes the RDH layer, rebuilds the overflowed stego and the latent, and runs the network backwards. On a lossy channel
+it simply reads the watermark, which survives noise and JPEG because of a noise layer used in training. The paper
+adds an overflow penalty loss and reports a much shorter auxiliary bitstream than earlier robust-reversible schemes.
+
+\textbf{Limitation we want to address.} In DRRW the latent variable always has to be stored, so part of the auxiliary
+stream is spent on information that has nothing to do with the message. The networks are also large and need a GPU.
+
+\section*{3. Related work}
+\textbf{Classical RDH.} Difference expansion (Tian, 2003), histogram shifting (Ni \emph{et al.}, 2006) and
+prediction-error expansion, PEE (Thodi and Rodr\'iguez, 2007), are the foundations. Sachnev \emph{et al.} (2009) added
+the rhombus predictor, two-pass checkerboard embedding and sorting by local variance, and Ou \emph{et al.} (2013)
+introduced pairwise PEE. These methods are exactly reversible but give no robustness: one changed pixel breaks the
+extraction.
+
+\textbf{CNN predictors for RDH.} Hu and Xiang replaced hand-made predictors with a CNN (IEEE SPL, 2021) and later
+added adaptive embedding (IEEE TPAMI, 2022). Qiu \emph{et al.} (Entropy, 2025) also predict pixel complexity with the
+network. Learning only improves the predictor; the embedding itself stays classical.
+
+\textbf{Deep and invertible steganography.} Baluja (NeurIPS 2017) and HiDDeN (ECCV 2018) showed that networks can hide
+data, HiDDeN with a noise layer for robustness. HiNet (ICCV 2021) and ISN (CVPR 2021) used invertible networks with
+affine coupling (RealNVP style) so the same weights hide and reveal. RIIS (CVPR 2022), PRIS (2023) and Lan \emph{et al.}
+(AAAI 2023) make the revealed data survive distortions. None of these return the cover exactly.
+
+\begin{center}
+\small
+\begin{tabular}{lcccc}
+\hline
+Method & Learned & Exact cover recovery & Robust message & Extra data stored \\
+\hline
+PEE / rhombus PEE (Sachnev 2009) & no & yes & no & location map \\
+CNN predictor RDH (Hu \& Xiang 2021/22) & predictor only & yes & no & location map \\
+HiDDeN (2018) & yes & no & yes & -- \\
+HiNet / ISN (2021) & yes (INN) & no & no & -- \\
+RIIS / PRIS / Lan \emph{et al.} & yes (INN) & no & yes & -- \\
+DRRW / CRMark (2025) & yes (integer INN) & yes & yes & latent + overflow \\
+Ours (planned) & yes (integer coupling) & yes & yes & decoder errors + overflow \\
+\hline
+\end{tabular}
+\end{center}
+
+\section*{4. Problem statement}
+Design a steganographic scheme, trained end-to-end, that (i) hides a binary message in an 8-bit grayscale image,
+(ii) returns the message with BER $= 0$ and the cover bit-for-bit on a lossless channel, (iii) keeps the message
+readable when the stego is mildly distorted, and (iv) keeps the auxiliary data needed for exact recovery small, so the
+second (classical RDH) stage costs little image quality. We also want the model small enough to train on a CPU.
+
+\textbf{Initial idea for the extension.} Instead of an invertible map that produces a latent, we plan to condition an
+\emph{integer} additive coupling network on the message. Given the message, the cover is then recovered exactly by
+subtraction, so no latent has to be stored. The only auxiliary data left are the bits the decoder reads wrongly and
+the overflow pixels, which we code with an arithmetic coder whose contexts come from the decoder's own confidence.
+
+\section*{5. Datasets and evaluation plan}
+BOSSbase 1.01 could not be downloaded from our network, so we use BSD100 (100 images) and Kodak (24 images) as natural
+image test sets, real DICOM CT/MR/CR scans from the public pydicom test collection as the medical set, and Urban100 for
+training (disjoint from all test sets). Metrics: PSNR, SSIM, payload in bpp, BER, NC, exact-recovery rate, and BER under
+Gaussian noise, salt-and-pepper noise and JPEG. NPCR/UACI are listed for the encrypted-domain tracks (TRK-03/04) and
+do not apply to TRK-07.
+
+\section*{6. Toolbox setup}
+\begin{itemize}
+\item MATLAB R2022b or newer, Image Processing Toolbox (image I/O, JPEG attack) and the App Designer components
+(\texttt{uifigure}, \texttt{uiaxes}) for the GUI. Network inference is written with plain matrix code
+(\texttt{conv3x3.m}), so the Deep Learning Toolbox is not needed to run the system.
+\item The networks are trained in Python (PyTorch, CPU) and the weights are exported to \texttt{.mat} files that
+MATLAB reads directly. Training scripts are in \texttt{training/}.
+\end{itemize}
+
+\section*{Key references}
+\small
+Chen \emph{et al.}, ``Deep robust reversible watermarking,'' arXiv:2503.02490, 2025.
+Chen \emph{et al.}, ``Learning robust image watermarking with lossless cover recovery,'' ICCV 2025.
+Sachnev \emph{et al.}, IEEE TCSVT 19(7), 2009. Hu and Xiang, IEEE SPL 28, 2021; IEEE TPAMI 44(12), 2022.
+Jing \emph{et al.}, ``HiNet,'' ICCV 2021. Lu \emph{et al.}, ``ISN,'' CVPR 2021. Xu \emph{et al.}, ``RIIS,'' CVPR 2022.
+Hoogeboom \emph{et al.}, ``Integer discrete flows,'' NeurIPS 2019. Zhu \emph{et al.}, ``HiDDeN,'' ECCV 2018.
+\end{document}
