@@ -1,0 +1,63 @@
+92 train / 8 val, scales [2, 4, 8], noise 1
+it     1 s=4 loss 6.9351  mse 2.045 (PSNR 45.02)  bce 0.6929  of 0.0077      0s
+it   250 s=4 loss 0.6972  mse 131.859 (PSNR 26.93)  bce 0.0411  of 0.0882     14s
+it   500 s=8 loss 0.1154  mse 52.463 (PSNR 30.93)  bce 0.0009  of 0.0051     27s
+it   750 s=8 loss 0.0905  mse 37.675 (PSNR 32.37)  bce 0.0004  of 0.0439     40s
+it  1000 s=2 loss 0.3260  mse 104.322 (PSNR 27.95)  bce 0.0077  of 0.1613     52s
+   val s=2: PSNR 27.80 BER 0.0020 ovf 0.0334 exact 8/8  s=4: PSNR 29.69 BER 0.0001 ovf 0.0279 exact 8/8  s=8: PSNR 30.16 BER 0.0000 ovf 0.0291 exact 8/8
+it  1250 s=8 loss 0.0600  mse 24.518 (PSNR 34.24)  bce 0.0009  of 0.0087     83s
+it  1500 s=8 loss 0.0828  mse 25.370 (PSNR 34.09)  bce 0.0011  of 0.0350     97s
+it  1750 s=4 loss 0.2562  mse 15.079 (PSNR 36.35)  bce 0.0116  of 0.0294    110s
+it  2000 s=4 loss 0.2351  mse 10.845 (PSNR 37.78)  bce 0.0038  of 0.0062    123s
+   val s=2: PSNR 33.90 BER 0.0119 ovf 0.0239 exact 8/8  s=4: PSNR 37.93 BER 0.0045 ovf 0.0171 exact 8/8  s=8: PSNR 39.63 BER 0.0006 ovf 0.0156 exact 8/8
+it  2250 s=8 loss 0.4982  mse 8.863 (PSNR 38.65)  bce 0.0222  of 0.0060    154s
+it  2500 s=4 loss 0.6076  mse 7.134 (PSNR 39.60)  bce 0.0172  of 0.0927    181s
+it  2750 s=4 loss 3.1982  mse 6.372 (PSNR 40.09)  bce 0.2760  of 0.0104    198s
+it  3000 s=4 loss 0.8807  mse 5.397 (PSNR 40.81)  bce 0.0359  of 0.0241    217s
+   val s=2: PSNR 38.02 BER 0.0259 ovf 0.0186 exact 8/8  s=4: PSNR 40.93 BER 0.0086 ovf 0.0153 exact 8/8  s=8: PSNR 42.04 BER 0.0010 ovf 0.0151 exact 8/8
+it  3250 s=4 loss 8.2576  mse 3.033 (PSNR 43.31)  bce 0.7899  of 0.0026    250s
+it  3500 s=2 loss 17.0079  mse 7.139 (PSNR 39.59)  bce 1.5854  of 0.0549    263s
+it  3750 s=4 loss 8.3847  mse 2.089 (PSNR 44.93)  bce 0.7942  of 0.0306    276s
+it  4000 s=2 loss 10.0767  mse 4.195 (PSNR 41.90)  bce 0.9128  of 0.0151    288s
+   val s=2: PSNR 41.79 BER 0.0527 ovf 0.0139 exact 8/8  s=4: PSNR 44.92 BER 0.0193 ovf 0.0112 exact 8/8  s=8: PSNR 46.34 BER 0.0033 ovf 0.0114 exact 8/8
+it  4250 s=4 loss 1.1402  mse 2.806 (PSNR 43.65)  bce 0.0182  of 0.0916    319s
+it  4500 s=4 loss 2.2515  mse 2.606 (PSNR 43.97)  bce 0.1453  of 0.0037    332s
+it  4750 s=4 loss 1.0917  mse 2.117 (PSNR 44.87)  bce 0.0348  of 0.0010    344s
+it  5000 s=4 loss 1.0413  mse 1.469 (PSNR 46.46)  bce 0.0392  of 0.0189    356s
+   val s=2: PSNR 43.48 BER 0.0758 ovf 0.0124 exact 8/8  s=4: PSNR 46.84 BER 0.0345 ovf 0.0099 exact 8/8  s=8: PSNR 47.97 BER 0.0072 ovf 0.0102 exact 8/8
+it  5250 s=4 loss 1.3303  mse 1.157 (PSNR 47.50)  bce 0.0784  of 0.0057    385s
+it  5500 s=8 loss 1.0434  mse 1.456 (PSNR 46.50)  bce 0.0285  of 0.0028    396s
+it  5750 s=4 loss 1.1307  mse 1.464 (PSNR 46.48)  bce 0.0283  of 0.0015    408s
+it  6000 s=2 loss 8.7113  mse 2.596 (PSNR 43.99)  bce 0.7049  of 0.0001    420s
+   val s=2: PSNR 43.89 BER 0.0830 ovf 0.0123 exact 8/8  s=4: PSNR 46.71 BER 0.0359 ovf 0.0105 exact 8/8  s=8: PSNR 47.68 BER 0.0126 ovf 0.0108 exact 8/8
+it  6250 s=8 loss 0.9876  mse 0.731 (PSNR 49.49)  bce 0.0457  of 0.0030    451s
+it  6500 s=8 loss 0.8811  mse 0.928 (PSNR 48.46)  bce 0.0154  of 0.0007    464s
+it  6750 s=2 loss 2.5949  mse 1.896 (PSNR 45.35)  bce 0.0835  of 0.0297    477s
+it  7000 s=8 loss 0.8670  mse 0.722 (PSNR 49.55)  bce 0.0135  of 0.0118    489s
+   val s=2: PSNR 45.57 BER 0.0941 ovf 0.0112 exact 8/8  s=4: PSNR 48.84 BER 0.0404 ovf 0.0086 exact 8/8  s=8: PSNR 50.11 BER 0.0086 ovf 0.0079 exact 8/8
+it  7250 s=8 loss 1.2469  mse 0.690 (PSNR 49.75)  bce 0.0543  of 0.0029    520s
+it  7500 s=4 loss 1.5064  mse 0.972 (PSNR 48.25)  bce 0.0445  of 0.0178    532s
+it  7750 s=4 loss 1.4457  mse 0.793 (PSNR 49.14)  bce 0.0652  of 0.0001    544s
+it  8000 s=8 loss 1.5254  mse 0.818 (PSNR 49.01)  bce 0.0690  of 0.0035    556s
+   val s=2: PSNR 46.21 BER 0.0989 ovf 0.0106 exact 8/8  s=4: PSNR 48.32 BER 0.0339 ovf 0.0089 exact 8/8  s=8: PSNR 48.81 BER 0.0054 ovf 0.0086 exact 8/8
+it  8250 s=2 loss 2.9747  mse 1.427 (PSNR 46.59)  bce 0.1529  of 0.0037    585s
+it  8500 s=4 loss 2.4725  mse 1.088 (PSNR 47.77)  bce 0.1325  of 0.0120    597s
+it  8750 s=2 loss 4.4355  mse 1.554 (PSNR 46.22)  bce 0.2825  of 0.0115    609s
+it  9000 s=8 loss 10.9132  mse 0.691 (PSNR 49.74)  bce 1.0218  of 0.0009    620s
+   val s=2: PSNR 45.88 BER 0.0948 ovf 0.0110 exact 8/8  s=4: PSNR 48.48 BER 0.0332 ovf 0.0090 exact 8/8  s=8: PSNR 49.24 BER 0.0071 ovf 0.0086 exact 8/8
+it  9250 s=4 loss 8.9397  mse 0.750 (PSNR 49.38)  bce 0.8187  of 0.0006    649s
+it  9500 s=4 loss 1.4136  mse 0.836 (PSNR 48.91)  bce 0.0551  of 0.0053    660s
+it  9750 s=4 loss 1.4268  mse 0.737 (PSNR 49.46)  bce 0.0674  of 0.0031    671s
+it 10000 s=4 loss 8.6295  mse 0.848 (PSNR 48.85)  bce 0.7769  of 0.0024    683s
+   val s=2: PSNR 46.31 BER 0.0974 ovf 0.0105 exact 8/8  s=4: PSNR 48.91 BER 0.0359 ovf 0.0085 exact 8/8  s=8: PSNR 49.84 BER 0.0086 ovf 0.0075 exact 8/8
+it 10250 s=2 loss 3.6731  mse 1.515 (PSNR 46.33)  bce 0.1949  of 0.0417    711s
+it 10500 s=2 loss 3.9395  mse 1.607 (PSNR 46.07)  bce 0.2315  of 0.0034    722s
+it 10750 s=8 loss 1.0181  mse 0.632 (PSNR 50.13)  bce 0.0382  of 0.0009    733s
+it 11000 s=2 loss 2.9757  mse 1.481 (PSNR 46.42)  bce 0.1480  of 0.0028    745s
+   val s=2: PSNR 46.15 BER 0.0952 ovf 0.0106 exact 8/8  s=4: PSNR 48.58 BER 0.0329 ovf 0.0088 exact 8/8  s=8: PSNR 49.17 BER 0.0069 ovf 0.0085 exact 8/8
+it 11250 s=2 loss 3.6072  mse 1.513 (PSNR 46.33)  bce 0.2067  of 0.0055    772s
+it 11500 s=2 loss 5.0508  mse 1.589 (PSNR 46.12)  bce 0.3458  of 0.0008    783s
+it 11750 s=8 loss 1.3232  mse 0.761 (PSNR 49.32)  bce 0.0556  of 0.0012    794s
+it 12000 s=8 loss 0.9338  mse 0.708 (PSNR 49.63)  bce 0.0209  of 0.0032    805s
+   val s=2: PSNR 46.29 BER 0.0969 ovf 0.0105 exact 8/8  s=4: PSNR 48.77 BER 0.0338 ovf 0.0086 exact 8/8  s=8: PSNR 49.37 BER 0.0076 ovf 0.0083 exact 8/8
+saved ../models/icinn
